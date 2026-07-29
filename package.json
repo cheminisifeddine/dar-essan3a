@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "deploy": "npm run pages:build && npx wrangler pages deploy .vercel/output",
+    "d1:migrate": "npx wrangler d1 execute DB --file=./migrations/0001_init.sql"
   },
   "dependencies": {
     "next": "14.2.35",
@@ -14,6 +17,8 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.11.2",
+    "@cloudflare/workers-types": "^4.20260702.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

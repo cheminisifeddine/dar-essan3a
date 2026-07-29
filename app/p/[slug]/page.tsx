@@ -1,8 +1,10 @@
+export const runtime = "edge";
+
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { products, getProductBySlug, STORE, formatPrice } from "../../data/products";
+import { normalizeApiProduct, Product, STORE, formatPrice } from "../../data/products";
 import AnnouncementBar from "../../components/AnnouncementBar";
 import Header from "../../components/Header";
 import TrustBar from "../../components/TrustBar";
@@ -12,12 +14,40 @@ import Footer from "../../components/Footer";
 import WhatsAppFloat from "../../components/WhatsAppFloat";
 import ProductCard from "../../components/ProductCard";
 
-export async function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
+async function getProduct(slug: string): Promise<Product | null> {
+  try {
+    const base = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const res = await fetch(`${base}/api/products/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 60 },
+    });
+    const data = await res.json();
+    if (data.success && data.product) return normalizeApiProduct(data.product);
+  } catch (e) {
+    console.error("Failed to load product:", e);
+  }
+  return null;
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const product = getProductBySlug(params.slug);
+async function getAllProducts(): Promise<Product[]> {
+  try {
+    const base = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const res = await fetch(`${base}/api/products`, { next: { revalidate: 60 } });
+    const data = await res.json();
+    if (data.success && Array.isArray(data.products)) {
+      return data.products.map(normalizeApiProduct);
+    }
+  } catch (e) {
+    console.error("Failed to load products:", e);
+  }
+  return [];
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const product = await getProduct(params.slug);
   if (!product) return {};
   return {
     title: product.metaTitle,
@@ -33,11 +63,16 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-  const product = getProductBySlug(params.slug);
+export default async function ProductPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const product = await getProduct(params.slug);
   if (!product) notFound();
 
-  const related = products.filter((p) => p.slug !== product.slug).slice(0, 3);
+  const allProducts = await getAllProducts();
+  const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   return (
     <>

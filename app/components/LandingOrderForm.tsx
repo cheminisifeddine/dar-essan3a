@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { buildOrderMessage, getWhatsAppLink } from "../data/products";
 import { trackEvent } from "./PixelEvents";
 import LocationSelect from "./LocationSelect";
 
@@ -49,6 +48,8 @@ export function LandingOrderForm() {
   const [deliveryType, setDeliveryType] = useState<"home" | "stopdesk">("home");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [orderId, setOrderId] = useState("");
 
   const fee = deliveryType === "home" ? HOME_FEE : STOPDESK_FEE;
   const total = PRICE + fee;
@@ -63,7 +64,7 @@ export function LandingOrderForm() {
     });
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = "الرجاء إدخال الاسم واللقب";
@@ -80,13 +81,6 @@ export function LandingOrderForm() {
     setErrors({});
     setSubmitting(true);
 
-    const orderId = generateOrderId();
-    const deliveryLabel =
-      deliveryType === "home"
-        ? `توصيل للدار (${formatDZ(HOME_FEE)})`
-        : `التوصيل للمكتب — Stop Desk (${formatDZ(STOPDESK_FEE)})`;
-    const items = `${PRODUCT_NAME} × 1`;
-
     trackEvent("InitiateCheckout", {
       content_ids: [PRODUCT_SLUG],
       content_name: PRODUCT_NAME,
@@ -96,30 +90,64 @@ export function LandingOrderForm() {
       num_items: 1,
     });
 
-    const message = buildOrderMessage(
-      orderId,
-      name,
-      cleanPhone(phone),
-      wilaya,
-      city,
-      deliveryLabel,
-      items,
-      total,
-      getUtmString()
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: cleanPhone(phone),
+          wilaya,
+          city,
+          address,
+          deliveryType,
+          items: [
+            {
+              productId: null,
+              slug: PRODUCT_SLUG,
+              name: PRODUCT_NAME,
+              qty: 1,
+              price: PRICE,
+            },
+          ],
+          total,
+          shippingFee: fee,
+          utm: getUtmString(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrderId(data.orderId);
+        setDone(true);
+        trackEvent("Purchase", {
+          content_ids: [PRODUCT_SLUG],
+          content_name: PRODUCT_NAME,
+          content_type: "product",
+          value: total,
+          currency: "DZD",
+          num_items: 1,
+        });
+      } else {
+        setErrors({ submit: data.error || "حدث خطأ" });
+      }
+    } catch {
+      setErrors({ submit: "تعذر إرسال الطلب. تأكد من الاتصال." });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="bg-ivory rounded-2xl p-5 md:p-7 shadow-soft border border-gold/20 text-center" id="order">
+        <div className="text-5xl mb-4">✅</div>
+        <h3 className="font-amiri text-2xl md:text-3xl text-deepgreen mb-3">تم استلام طلبك بنجاح</h3>
+        <p className="font-tajawal text-muted mb-4">
+          شكراً {name}، رقم طلبك: <span className="font-bold text-deepgreen">#{orderId}</span>
+        </p>
+        <p className="font-tajawal text-muted">سنتصل بك قريباً على الرقم {phone} لتأكيد الطلب.</p>
+      </div>
     );
-
-    trackEvent("Purchase", {
-      content_ids: [PRODUCT_SLUG],
-      content_name: PRODUCT_NAME,
-      content_type: "product",
-      value: total,
-      currency: "DZD",
-      num_items: 1,
-    });
-
-    window.open(getWhatsAppLink(message), "_blank");
-
-    setTimeout(() => setSubmitting(false), 600);
   }
 
   return (
@@ -134,6 +162,7 @@ export function LandingOrderForm() {
       <p className="text-center text-muted font-tajawal text-sm mb-5">
         الدفع عند الاستلام — افتحي الطرد وتحققي قبل الدفع ✅
       </p>
+      {errors.submit && <p className="text-terracotta text-center mb-4 font-tajawal">{errors.submit}</p>}
 
       <div className="mb-4">
         <label className="block font-tajawal text-sm text-muted mb-1.5">الاسم واللقب *</label>

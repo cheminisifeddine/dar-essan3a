@@ -1,7 +1,7 @@
-import { products } from "../data/products";
+import { Product } from "../data/products";
 import ProductCard from "./ProductCard";
 
-export function ProductGrid() {
+export function ProductGrid({ products }: { products: Product[] }) {
   return (
     <section id="products" className="py-16 md:py-24 bg-cream">
       <div className="container mx-auto px-4">

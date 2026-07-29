@@ -4,10 +4,7 @@ import { useState } from "react";
 import {
   Product,
   STORE,
-  products,
   formatPrice,
-  buildOrderMessage,
-  getWhatsAppLink,
 } from "../data/products";
 import { trackEvent } from "./PixelEvents";
 import LocationSelect from "./LocationSelect";
@@ -44,7 +41,7 @@ export function OrderForm({
   initialProduct?: Product;
   onSuccess?: () => void;
 }) {
-  const product = initialProduct || products[0];
+  const product = initialProduct!;
   const [quantity, setQuantity] = useState(1);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -53,13 +50,15 @@ export function OrderForm({
   const [deliveryType, setDeliveryType] = useState<"home" | "stopdesk">("home");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [orderId, setOrderId] = useState("");
 
   const subtotal = product.price * quantity;
   const isFreeShipping = subtotal >= STORE.freeShippingThreshold;
   const shipping = isFreeShipping ? 0 : deliveryType === "home" ? STORE.homeDeliveryFee : STORE.stopDeskFee;
   const total = subtotal + shipping;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = "الرجاء إدخال الاسم الكامل";
@@ -75,13 +74,6 @@ export function OrderForm({
     setErrors({});
     setSubmitting(true);
 
-    const orderId = generateOrderId();
-    const items = `${product.name} × ${quantity}`;
-    const deliveryLabel =
-      deliveryType === "home"
-        ? `توصيل للمنزل (${isFreeShipping ? "مجاني" : formatPrice(STORE.homeDeliveryFee)})`
-        : `التوصيل للمكتب — Stop Desk (${isFreeShipping ? "مجاني" : formatPrice(STORE.stopDeskFee)})`;
-
     trackEvent("InitiateCheckout", {
       content_ids: [product.slug],
       content_name: product.name,
@@ -90,34 +82,64 @@ export function OrderForm({
       num_items: quantity,
     });
 
-    const message = buildOrderMessage(
-      orderId,
-      name,
-      cleanPhone(phone),
-      wilaya,
-      city,
-      deliveryLabel,
-      items,
-      total,
-      getUtmString()
-    );
-
-    // Fire purchase event immediately before opening WhatsApp
-    trackEvent("Purchase", {
-      content_ids: [product.slug],
-      content_name: product.name,
-      value: total,
-      currency: "DZD",
-      num_items: quantity,
-    });
-
-    // Open WhatsApp with prefilled message
-    window.open(getWhatsAppLink(message), "_blank");
-
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: cleanPhone(phone),
+          wilaya,
+          city,
+          address: "",
+          deliveryType,
+          items: [
+            {
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              qty: quantity,
+              price: product.price,
+            },
+          ],
+          total,
+          shippingFee: shipping,
+          utm: getUtmString(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrderId(data.orderId);
+        setDone(true);
+        trackEvent("Purchase", {
+          content_ids: [product.slug],
+          content_name: product.name,
+          value: total,
+          currency: "DZD",
+          num_items: quantity,
+        });
+      } else {
+        setErrors({ submit: data.error || "حدث خطأ" });
+      }
+    } catch {
+      setErrors({ submit: "تعذر إرسال الطلب. تأكد من الاتصال." });
+    } finally {
       setSubmitting(false);
       onSuccess?.();
-    }, 600);
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="bg-ivory rounded-2xl p-5 md:p-7 shadow-soft border border-gold/10 text-center">
+        <div className="text-5xl mb-4">✅</div>
+        <h3 className="font-amiri text-2xl text-deepgreen mb-3">تم استلام طلبك بنجاح</h3>
+        <p className="font-tajawal text-muted mb-4">
+          شكراً {name}، رقم طلبك: <span className="font-bold text-deepgreen">#{orderId}</span>
+        </p>
+        <p className="font-tajawal text-muted">سنتصل بك قريباً على الرقم {phone} لتأكيد الطلب.</p>
+      </div>
+    );
   }
 
   return (
@@ -125,6 +147,7 @@ export function OrderForm({
       <h3 className="font-amiri text-2xl text-deepgreen mb-5 text-center">
         اطلب الآن — الدفع عند الاستلام
       </h3>
+      {errors.submit && <p className="text-terracotta text-center mb-4 font-tajawal">{errors.submit}</p>}
 
       {/* Quantity */}
       <div className="mb-4">

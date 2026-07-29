@@ -166,6 +166,27 @@ export function formatPrice(n: number): string {
   return `${n.toLocaleString("ar-DZ")} ${STORE.currency}`;
 }
 
+export function normalizeApiProduct(raw: any): Product {
+  return {
+    id: String(raw.id),
+    slug: String(raw.slug),
+    name: String(raw.name),
+    hook: String(raw.hook || ""),
+    price: Number(raw.price),
+    oldPrice: Number(raw.old_price || raw.oldPrice || 0),
+    description: String(raw.description || ""),
+    bullets: Array.isArray(raw.bullets)
+      ? raw.bullets
+      : JSON.parse(raw.bullets || "[]"),
+    images: Array.isArray(raw.images)
+      ? raw.images
+      : JSON.parse(raw.images || "[]"),
+    ogImage: String(raw.og_image || raw.ogImage || ""),
+    metaTitle: String(raw.meta_title || raw.metaTitle || raw.name),
+    metaDescription: String(raw.meta_description || raw.metaDescription || raw.description || ""),
+  };
+}
+
 export function discountPercent(p: Product): number {
   return Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100);
 }
