@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { products, getProductBySlug, STORE, formatPrice, discountPercent } from "../../data/products";
+import { products, getProductBySlug, STORE, formatPrice } from "../../data/products";
 import AnnouncementBar from "../../components/AnnouncementBar";
 import Header from "../../components/Header";
 import TrustBar from "../../components/TrustBar";
@@ -37,7 +37,6 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const product = getProductBySlug(params.slug);
   if (!product) notFound();
 
-  const disc = discountPercent(product);
   const related = products.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   return (

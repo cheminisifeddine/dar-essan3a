@@ -8,7 +8,6 @@ import {
   formatPrice,
   buildOrderMessage,
   getWhatsAppLink,
-  discountPercent,
 } from "../data/products";
 import { wilayas, getWilayaName } from "../data/wilayas";
 import { trackEvent } from "./PixelEvents";
@@ -124,24 +123,6 @@ export function OrderForm({
 
     // Open WhatsApp with prefilled message
     window.open(getWhatsAppLink(message), "_blank");
-
-    // Optional: ping a stub endpoint for future webhook wiring
-    fetch("/api/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        orderId,
-        name,
-        phone: cleanPhone(phone),
-        wilaya: getWilayaName(wilayaCode),
-        commune,
-        deliveryType: deliveryLabel,
-        items,
-        shipping,
-        total,
-        utm: getUtmString(),
-      }),
-    }).catch(() => {});
 
     setTimeout(() => {
       setSubmitting(false);

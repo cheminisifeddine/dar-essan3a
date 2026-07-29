@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Product, STORE, formatPrice, discountPercent } from "../data/products";
+import { Product, formatPrice, discountPercent } from "../data/products";
 
-export function ProductCard({ product, index }: { product: Product; index?: number }) {
+export function ProductCard({ product }: { product: Product }) {
   const disc = discountPercent(product);
   return (
     <div className="group bg-ivory rounded-arch overflow-hidden border border-gold/10 shadow-soft hover:shadow-lg transition-shadow">

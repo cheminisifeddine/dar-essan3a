@@ -1,5 +1,3 @@
-import { STORE } from "../data/products";
-
 export function AnnouncementBar() {
   return (
     <div className="bg-deepgreen text-gold text-sm py-2.5 text-center font-tajawal font-medium">
