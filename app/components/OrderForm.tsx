@@ -9,8 +9,8 @@ import {
   buildOrderMessage,
   getWhatsAppLink,
 } from "../data/products";
-import { wilayas, getWilayaName } from "../data/wilayas";
 import { trackEvent } from "./PixelEvents";
+import LocationSelect from "./LocationSelect";
 
 function generateOrderId(): string {
   return Math.floor(1000 + Math.random() * 9000).toString();
@@ -48,8 +48,8 @@ export function OrderForm({
   const [quantity, setQuantity] = useState(1);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [wilayaCode, setWilayaCode] = useState("");
-  const [commune, setCommune] = useState("");
+  const [wilaya, setWilaya] = useState("");
+  const [city, setCity] = useState("");
   const [deliveryType, setDeliveryType] = useState<"home" | "stopdesk">("home");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -74,8 +74,8 @@ export function OrderForm({
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = "الرجاء إدخال الاسم الكامل";
     if (!validatePhone(phone)) newErrors.phone = "الرجاء إدخال رقم هاتف جزائري صحيح";
-    if (!wilayaCode) newErrors.wilaya = "الرجاء اختيار الولاية";
-    if (!commune.trim()) newErrors.commune = "الرجاء إدخال البلدية";
+    if (!wilaya) newErrors.wilaya = "الرجاء اختيار الولاية";
+    if (!city) newErrors.city = "الرجاء اختيار البلدية";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -104,8 +104,8 @@ export function OrderForm({
       orderId,
       name,
       cleanPhone(phone),
-      getWilayaName(wilayaCode),
-      commune,
+      wilaya,
+      city,
       deliveryLabel,
       items,
       total,
@@ -203,35 +203,15 @@ export function OrderForm({
         {errors.phone && <p className="text-terracotta text-sm mt-1 font-tajawal">{errors.phone}</p>}
       </div>
 
-      {/* Wilaya */}
+      {/* Wilaya & City */}
       <div className="mb-4">
-        <label className="block font-tajawal text-sm text-muted mb-1.5">الولاية *</label>
-        <select
-          value={wilayaCode}
-          onChange={(e) => setWilayaCode(e.target.value)}
-          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50"
-        >
-          <option value="">اختر الولاية</option>
-          {wilayas.map((w) => (
-            <option key={w.code} value={w.code}>
-              {w.name} ({w.code})
-            </option>
-          ))}
-        </select>
-        {errors.wilaya && <p className="text-terracotta text-sm mt-1 font-tajawal">{errors.wilaya}</p>}
-      </div>
-
-      {/* Commune */}
-      <div className="mb-4">
-        <label className="block font-tajawal text-sm text-muted mb-1.5">البلدية *</label>
-        <input
-          type="text"
-          value={commune}
-          onChange={(e) => setCommune(e.target.value)}
-          placeholder="مثال: بوسعادة، الجزائر العاصمة، وهران..."
-          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted/50"
+        <LocationSelect
+          wilaya={wilaya}
+          city={city}
+          onWilayaChange={setWilaya}
+          onCityChange={setCity}
+          errors={{ wilaya: errors.wilaya, city: errors.city }}
         />
-        {errors.commune && <p className="text-terracotta text-sm mt-1 font-tajawal">{errors.commune}</p>}
       </div>
 
       {/* Delivery type */}
