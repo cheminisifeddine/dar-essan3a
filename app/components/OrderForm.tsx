@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Product,
   STORE,
@@ -44,30 +44,20 @@ export function OrderForm({
   initialProduct?: Product;
   onSuccess?: () => void;
 }) {
-  const [selectedSlug, setSelectedSlug] = useState(initialProduct?.slug || products[0].slug);
+  const product = initialProduct || products[0];
   const [quantity, setQuantity] = useState(1);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [wilaya, setWilaya] = useState("");
   const [city, setCity] = useState("");
   const [deliveryType, setDeliveryType] = useState<"home" | "stopdesk">("home");
-  const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-
-  const product = useMemo(
-    () => products.find((p) => p.slug === selectedSlug) || products[0],
-    [selectedSlug]
-  );
 
   const subtotal = product.price * quantity;
   const isFreeShipping = subtotal >= STORE.freeShippingThreshold;
   const shipping = isFreeShipping ? 0 : deliveryType === "home" ? STORE.homeDeliveryFee : STORE.stopDeskFee;
   const total = subtotal + shipping;
-
-  useEffect(() => {
-    if (initialProduct) setSelectedSlug(initialProduct.slug);
-  }, [initialProduct]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,7 +80,7 @@ export function OrderForm({
     const deliveryLabel =
       deliveryType === "home"
         ? `توصيل للمنزل (${isFreeShipping ? "مجاني" : formatPrice(STORE.homeDeliveryFee)})`
-        : `مكتب التوصيل — Stop Desk (${isFreeShipping ? "مجاني" : formatPrice(STORE.stopDeskFee)})`;
+        : `التوصيل للمكتب — Stop Desk (${isFreeShipping ? "مجاني" : formatPrice(STORE.stopDeskFee)})`;
 
     trackEvent("InitiateCheckout", {
       content_ids: [product.slug],
@@ -136,22 +126,6 @@ export function OrderForm({
         اطلب الآن — الدفع عند الاستلام
       </h3>
 
-      {/* Product */}
-      <div className="mb-4">
-        <label className="block font-tajawal text-sm text-muted mb-1.5">المنتج</label>
-        <select
-          value={selectedSlug}
-          onChange={(e) => setSelectedSlug(e.target.value)}
-          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50"
-        >
-          {products.map((p) => (
-            <option key={p.slug} value={p.slug}>
-              {p.name} — {formatPrice(p.price)}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {/* Quantity */}
       <div className="mb-4">
         <label className="block font-tajawal text-sm text-muted mb-1.5">الكمية</label>
@@ -196,7 +170,7 @@ export function OrderForm({
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="05xx xx xx xx"
+          placeholder="0550 50 50 50"
           className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted/50"
           dir="ltr"
         />
@@ -238,21 +212,9 @@ export function OrderForm({
               onChange={() => setDeliveryType("stopdesk")}
               className="accent-deepgreen"
             />
-            <span className="font-tajawal text-ink">مكتب التوصيل — Stop Desk {isFreeShipping ? "(مجاني)" : `(${formatPrice(STORE.stopDeskFee)})`}</span>
+            <span className="font-tajawal text-ink">التوصيل للمكتب — Stop Desk {isFreeShipping ? "(مجاني)" : `(${formatPrice(STORE.stopDeskFee)})`}</span>
           </label>
         </div>
-      </div>
-
-      {/* Notes */}
-      <div className="mb-5">
-        <label className="block font-tajawal text-sm text-muted mb-1.5">ملاحظات (اختياري)</label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={2}
-          placeholder="لون، حجم، أو أي ملاحظة..."
-          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted/50"
-        />
       </div>
 
       {/* Summary */}

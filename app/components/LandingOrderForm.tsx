@@ -84,7 +84,7 @@ export function LandingOrderForm() {
     const deliveryLabel =
       deliveryType === "home"
         ? `توصيل للدار (${formatDZ(HOME_FEE)})`
-        : `استلام من المكتب — Stop Desk (${formatDZ(STOPDESK_FEE)})`;
+        : `التوصيل للمكتب — Stop Desk (${formatDZ(STOPDESK_FEE)})`;
     const items = `${PRODUCT_NAME} × 1`;
 
     trackEvent("InitiateCheckout", {
@@ -153,7 +153,7 @@ export function LandingOrderForm() {
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="05xx xx xx xx"
+          placeholder="0550 50 50 50"
           className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted/50"
           dir="ltr"
         />
@@ -221,7 +221,7 @@ export function LandingOrderForm() {
                 onChange={() => setDeliveryType("stopdesk")}
                 className="accent-deepgreen"
               />
-              📦 المكتب (Stop Desk)
+              📦 التوصيل للمكتب (Stop Desk)
             </span>
             <span className="font-tajawal font-bold text-deepgreen">+{formatDZ(STOPDESK_FEE)}</span>
           </label>

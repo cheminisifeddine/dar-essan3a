@@ -93,7 +93,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               </h1>
               <p className="font-tajawal text-gold text-lg mb-4">{product.hook}</p>
 
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex flex-wrap items-center gap-4 mb-6">
                 <span className="font-amiri text-4xl font-bold text-deepgreen">
                   {formatPrice(product.price)}
                 </span>
