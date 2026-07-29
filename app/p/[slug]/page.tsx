@@ -5,6 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { normalizeApiProduct, Product, STORE, formatPrice } from "../../data/products";
+
+function getApiBase(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL || `https://${STORE.domain}`;
+}
 import AnnouncementBar from "../../components/AnnouncementBar";
 import Header from "../../components/Header";
 import TrustBar from "../../components/TrustBar";
@@ -16,7 +20,7 @@ import ProductCard from "../../components/ProductCard";
 
 async function getProduct(slug: string): Promise<Product | null> {
   try {
-    const base = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const base = getApiBase();
     const res = await fetch(`${base}/api/products/${encodeURIComponent(slug)}`, {
       next: { revalidate: 60 },
     });
@@ -30,7 +34,7 @@ async function getProduct(slug: string): Promise<Product | null> {
 
 async function getAllProducts(): Promise<Product[]> {
   try {
-    const base = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const base = getApiBase();
     const res = await fetch(`${base}/api/products`, { next: { revalidate: 60 } });
     const data = await res.json();
     if (data.success && Array.isArray(data.products)) {

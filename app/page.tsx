@@ -11,11 +11,11 @@ import FAQ from "./components/FAQ";
 import FinalCTA from "./components/FinalCTA";
 import Footer from "./components/Footer";
 import WhatsAppFloat from "./components/WhatsAppFloat";
-import { normalizeApiProduct, Product } from "./data/products";
+import { normalizeApiProduct, Product, STORE } from "./data/products";
 
 async function getProducts(): Promise<Product[]> {
   try {
-    const base = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const base = process.env.NEXT_PUBLIC_SITE_URL || `https://${STORE.domain}`;
     const res = await fetch(`${base}/api/products`, { next: { revalidate: 60 } });
     const data = await res.json();
     if (data.success && Array.isArray(data.products)) {
