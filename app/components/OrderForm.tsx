@@ -1,0 +1,331 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  Product,
+  STORE,
+  products,
+  formatPrice,
+  buildOrderMessage,
+  getWhatsAppLink,
+  discountPercent,
+} from "../data/products";
+import { wilayas, getWilayaName } from "../data/wilayas";
+import { trackEvent } from "./PixelEvents";
+
+function generateOrderId(): string {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
+function validatePhone(phone: string): boolean {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length !== 10) return false;
+  return /^0[567]/.test(digits);
+}
+
+function cleanPhone(phone: string): string {
+  return phone.replace(/\D/g, "");
+}
+
+function getUtmString(): string {
+  if (typeof window === "undefined") return "";
+  const params = new URLSearchParams(window.location.search);
+  const parts: string[] = [];
+  ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach((k) => {
+    const v = params.get(k);
+    if (v) parts.push(`${k}=${v}`);
+  });
+  return parts.join(" | ");
+}
+
+export function OrderForm({
+  initialProduct,
+  onSuccess,
+}: {
+  initialProduct?: Product;
+  onSuccess?: () => void;
+}) {
+  const [selectedSlug, setSelectedSlug] = useState(initialProduct?.slug || products[0].slug);
+  const [quantity, setQuantity] = useState(1);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [wilayaCode, setWilayaCode] = useState("");
+  const [commune, setCommune] = useState("");
+  const [deliveryType, setDeliveryType] = useState<"home" | "stopdesk">("home");
+  const [notes, setNotes] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  const product = useMemo(
+    () => products.find((p) => p.slug === selectedSlug) || products[0],
+    [selectedSlug]
+  );
+
+  const subtotal = product.price * quantity;
+  const isFreeShipping = subtotal >= STORE.freeShippingThreshold;
+  const shipping = isFreeShipping ? 0 : deliveryType === "home" ? STORE.homeDeliveryFee : STORE.stopDeskFee;
+  const total = subtotal + shipping;
+
+  useEffect(() => {
+    if (initialProduct) setSelectedSlug(initialProduct.slug);
+  }, [initialProduct]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    if (!name.trim()) newErrors.name = "الرجاء إدخال الاسم الكامل";
+    if (!validatePhone(phone)) newErrors.phone = "الرجاء إدخال رقم هاتف جزائري صحيح";
+    if (!wilayaCode) newErrors.wilaya = "الرجاء اختيار الولاية";
+    if (!commune.trim()) newErrors.commune = "الرجاء إدخال البلدية";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    setSubmitting(true);
+
+    const orderId = generateOrderId();
+    const items = `${product.name} × ${quantity}`;
+    const deliveryLabel =
+      deliveryType === "home"
+        ? `توصيل للمنزل (${isFreeShipping ? "مجاني" : formatPrice(STORE.homeDeliveryFee)})`
+        : `مكتب التوصيل — Stop Desk (${isFreeShipping ? "مجاني" : formatPrice(STORE.stopDeskFee)})`;
+
+    trackEvent("InitiateCheckout", {
+      content_ids: [product.slug],
+      content_name: product.name,
+      value: total,
+      currency: "DZD",
+      num_items: quantity,
+    });
+
+    const message = buildOrderMessage(
+      orderId,
+      name,
+      cleanPhone(phone),
+      getWilayaName(wilayaCode),
+      commune,
+      deliveryLabel,
+      items,
+      total,
+      getUtmString()
+    );
+
+    // Fire purchase event immediately before opening WhatsApp
+    trackEvent("Purchase", {
+      content_ids: [product.slug],
+      content_name: product.name,
+      value: total,
+      currency: "DZD",
+      num_items: quantity,
+    });
+
+    // Open WhatsApp with prefilled message
+    window.open(getWhatsAppLink(message), "_blank");
+
+    // Optional: ping a stub endpoint for future webhook wiring
+    fetch("/api/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        name,
+        phone: cleanPhone(phone),
+        wilaya: getWilayaName(wilayaCode),
+        commune,
+        deliveryType: deliveryLabel,
+        items,
+        shipping,
+        total,
+        utm: getUtmString(),
+      }),
+    }).catch(() => {});
+
+    setTimeout(() => {
+      setSubmitting(false);
+      onSuccess?.();
+    }, 600);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-ivory rounded-2xl p-5 md:p-7 shadow-soft border border-gold/10">
+      <h3 className="font-amiri text-2xl text-deepgreen mb-5 text-center">
+        اطلب الآن — الدفع عند الاستلام
+      </h3>
+
+      {/* Product */}
+      <div className="mb-4">
+        <label className="block font-tajawal text-sm text-muted mb-1.5">المنتج</label>
+        <select
+          value={selectedSlug}
+          onChange={(e) => setSelectedSlug(e.target.value)}
+          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50"
+        >
+          {products.map((p) => (
+            <option key={p.slug} value={p.slug}>
+              {p.name} — {formatPrice(p.price)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Quantity */}
+      <div className="mb-4">
+        <label className="block font-tajawal text-sm text-muted mb-1.5">الكمية</label>
+        <div className="inline-flex items-center border border-gold/30 rounded-xl bg-white overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            className="px-4 py-2 hover:bg-gold/10 text-deepgreen font-bold"
+          >
+            −
+          </button>
+          <span className="px-4 py-2 font-tajawal text-ink min-w-[3rem] text-center">
+            {quantity}
+          </span>
+          <button
+            type="button"
+            onClick={() => setQuantity((q) => q + 1)}
+            className="px-4 py-2 hover:bg-gold/10 text-deepgreen font-bold"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      {/* Name */}
+      <div className="mb-4">
+        <label className="block font-tajawal text-sm text-muted mb-1.5">الاسم الكامل *</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="مثال: فاطمة بن علي"
+          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted/50"
+        />
+        {errors.name && <p className="text-terracotta text-sm mt-1 font-tajawal">{errors.name}</p>}
+      </div>
+
+      {/* Phone */}
+      <div className="mb-4">
+        <label className="block font-tajawal text-sm text-muted mb-1.5">رقم الهاتف *</label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="05xx xx xx xx"
+          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted/50"
+          dir="ltr"
+        />
+        {errors.phone && <p className="text-terracotta text-sm mt-1 font-tajawal">{errors.phone}</p>}
+      </div>
+
+      {/* Wilaya */}
+      <div className="mb-4">
+        <label className="block font-tajawal text-sm text-muted mb-1.5">الولاية *</label>
+        <select
+          value={wilayaCode}
+          onChange={(e) => setWilayaCode(e.target.value)}
+          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50"
+        >
+          <option value="">اختر الولاية</option>
+          {wilayas.map((w) => (
+            <option key={w.code} value={w.code}>
+              {w.name} ({w.code})
+            </option>
+          ))}
+        </select>
+        {errors.wilaya && <p className="text-terracotta text-sm mt-1 font-tajawal">{errors.wilaya}</p>}
+      </div>
+
+      {/* Commune */}
+      <div className="mb-4">
+        <label className="block font-tajawal text-sm text-muted mb-1.5">البلدية *</label>
+        <input
+          type="text"
+          value={commune}
+          onChange={(e) => setCommune(e.target.value)}
+          placeholder="مثال: بوسعادة، الجزائر العاصمة، وهران..."
+          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted/50"
+        />
+        {errors.commune && <p className="text-terracotta text-sm mt-1 font-tajawal">{errors.commune}</p>}
+      </div>
+
+      {/* Delivery type */}
+      <div className="mb-4">
+        <label className="block font-tajawal text-sm text-muted mb-2">نوع التوصيل *</label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-3 p-3 rounded-xl border border-gold/20 bg-white cursor-pointer hover:border-gold/50">
+            <input
+              type="radio"
+              name="deliveryType"
+              value="home"
+              checked={deliveryType === "home"}
+              onChange={() => setDeliveryType("home")}
+              className="accent-deepgreen"
+            />
+            <span className="font-tajawal text-ink">توصيل للمنزل {isFreeShipping ? "(مجاني)" : `(${formatPrice(STORE.homeDeliveryFee)})`}</span>
+          </label>
+          <label className="flex items-center gap-3 p-3 rounded-xl border border-gold/20 bg-white cursor-pointer hover:border-gold/50">
+            <input
+              type="radio"
+              name="deliveryType"
+              value="stopdesk"
+              checked={deliveryType === "stopdesk"}
+              onChange={() => setDeliveryType("stopdesk")}
+              className="accent-deepgreen"
+            />
+            <span className="font-tajawal text-ink">مكتب التوصيل — Stop Desk {isFreeShipping ? "(مجاني)" : `(${formatPrice(STORE.stopDeskFee)})`}</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div className="mb-5">
+        <label className="block font-tajawal text-sm text-muted mb-1.5">ملاحظات (اختياري)</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          placeholder="لون، حجم، أو أي ملاحظة..."
+          className="w-full rounded-xl border border-gold/30 bg-white px-4 py-3 font-tajawal text-ink focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted/50"
+        />
+      </div>
+
+      {/* Summary */}
+      <div className="bg-deepgreen/5 rounded-xl p-4 mb-5 border border-gold/10">
+        <div className="flex justify-between font-tajawal text-muted mb-2">
+          <span>المنتج × {quantity}</span>
+          <span>{formatPrice(subtotal)}</span>
+        </div>
+        <div className="flex justify-between font-tajawal text-muted mb-3">
+          <span>التوصيل</span>
+          <span>{isFreeShipping ? "مجاني" : formatPrice(shipping)}</span>
+        </div>
+        <div className="flex justify-between items-center pt-3 border-t border-gold/20">
+          <span className="font-tajawal font-bold text-ink">المجموع</span>
+          <span className="font-amiri text-3xl text-deepgreen font-bold">{formatPrice(total)}</span>
+        </div>
+        {isFreeShipping && (
+          <p className="text-gold font-tajawal text-sm mt-2 text-center">🎉 تهانينا! التوصيل مجاني</p>
+        )}
+      </div>
+
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-full bg-gold text-deepgreen font-tajawal font-bold text-lg py-4 rounded-xl hover:bg-gold/90 transition-colors shadow-soft disabled:opacity-70"
+      >
+        {submitting ? "جارٍ إرسال الطلب…" : "✅ تأكيد الطلب — الدفع عند الاستلام"}
+      </button>
+      <p className="text-center text-muted text-sm mt-3 font-tajawal">
+        بالضغط على تأكيد، سنتصل بك هاتفياً لتأكيد طلبك قبل الشحن.
+      </p>
+    </form>
+  );
+}
+
+export default OrderForm;
