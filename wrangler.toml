@@ -14,11 +14,11 @@ bucket_name = "darelsanaa"
 [env.production]
 name = "dar-essan3a"
 
-[env.production.d1_databases]
+[[env.production.d1_databases]]
 binding = "DB"
 database_name = "dar-essan3a"
 database_id = "ae48b6d7-e3f2-475e-ae1f-7eb9c0f66d0d"
 
-[env.production.r2_buckets]
+[[env.production.r2_buckets]]
 binding = "PRODUCT_IMAGES"
 bucket_name = "darelsanaa"
