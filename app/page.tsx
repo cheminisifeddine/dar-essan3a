@@ -5,7 +5,6 @@ import TrustBar from "./components/TrustBar";
 import ProductGrid from "./components/ProductGrid";
 import BrandStory from "./components/BrandStory";
 import HowToOrder from "./components/HowToOrder";
-import Testimonials from "./components/Testimonials";
 import FAQ from "./components/FAQ";
 import FinalCTA from "./components/FinalCTA";
 import Footer from "./components/Footer";
@@ -22,7 +21,6 @@ export default function Home() {
         <ProductGrid />
         <BrandStory />
         <HowToOrder />
-        <Testimonials />
         <FAQ />
         <FinalCTA />
       </main>
