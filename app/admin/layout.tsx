@@ -1,9 +1,8 @@
 "use client";
-export const runtime = "edge";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const nav = [
   { href: "/admin", label: "لوحة التحكم" },
@@ -16,8 +15,14 @@ const nav = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<boolean | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    // Don't require auth for the login page itself
+    if (pathname === "/admin/login" || pathname === "/admin/login/") {
+      setAuth(true);
+      return;
+    }
     fetch("/api/admin/me")
       .then((r) => r.json())
       .then((data) => {
@@ -28,12 +33,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       })
       .catch(() => router.push("/admin/login"));
-  }, [router]);
+  }, [router, pathname]);
 
   async function handleLogout(e: React.FormEvent) {
     e.preventDefault();
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
+  }
+
+  if (pathname === "/admin/login" || pathname === "/admin/login/") {
+    return <>{children}</>;
   }
 
   if (auth !== true) {
