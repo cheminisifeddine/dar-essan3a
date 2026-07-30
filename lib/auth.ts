@@ -39,9 +39,9 @@ export function generateToken(): string {
 export function setAdminSession(response: NextResponse, token: string): void {
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "lax",
-    path: "/admin",
+    path: "/",
     maxAge: SESSION_DURATION_SECONDS,
   });
 }
@@ -49,9 +49,9 @@ export function setAdminSession(response: NextResponse, token: string): void {
 export function clearAdminSession(response: NextResponse): void {
   response.cookies.set(SESSION_COOKIE, "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "lax",
-    path: "/admin",
+    path: "/",
     maxAge: 0,
   });
 }
