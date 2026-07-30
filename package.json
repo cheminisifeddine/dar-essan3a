@@ -2,22 +2,26 @@
   "name": "dar-essan3a",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "async_hooks": "file:./shims/async_hooks"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "pages:build": "npx @cloudflare/next-on-pages",
-    "deploy": "npm run pages:build && npx wrangler pages deploy .vercel/output",
+    "deploy": "npm run pages:build && npx wrangler pages deploy .vercel/output/static",
     "d1:migrate": "npx wrangler d1 execute DB --file=./migrations/0001_init.sql"
   },
   "dependencies": {
+    "async_hooks": "file:./shims/async_hooks",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
-    "@cloudflare/next-on-pages": "^1.11.2",
+    "@cloudflare/next-on-pages": "1.13.0",
     "@cloudflare/workers-types": "^4.20260702.1",
     "@types/node": "^20",
     "@types/react": "^18",

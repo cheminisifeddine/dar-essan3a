@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import { getSettings } from "./db";
 
 const SESSION_COOKIE = "admin_session";
@@ -8,6 +8,16 @@ function bufferToHex(buffer: ArrayBuffer): string {
   return Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+function parseCookieHeader(headers: Headers): Record<string, string> {
+  const cookie = headers.get("cookie") || "";
+  const result: Record<string, string> = {};
+  cookie.split(";").forEach((part) => {
+    const [key, ...rest] = part.trim().split("=");
+    if (key) result[key] = rest.join("=") || "";
+  });
+  return result;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -26,31 +36,38 @@ export function generateToken(): string {
   return crypto.randomUUID();
 }
 
-export function setAdminSession(token: string): void {
-  const expires = new Date(Date.now() + SESSION_DURATION_SECONDS * 1000);
-  cookies().set(SESSION_COOKIE, token, {
+export function setAdminSession(response: NextResponse, token: string): void {
+  response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/admin",
-    expires,
+    maxAge: SESSION_DURATION_SECONDS,
   });
 }
 
-export function clearAdminSession(): void {
-  cookies().delete(SESSION_COOKIE);
+export function clearAdminSession(response: NextResponse): void {
+  response.cookies.set(SESSION_COOKIE, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/admin",
+    maxAge: 0,
+  });
 }
 
-export function getAdminSessionToken(): string | undefined {
-  return cookies().get(SESSION_COOKIE)?.value;
+export function getAdminSessionToken(request: Request): string | undefined {
+  return parseCookieHeader(request.headers)[SESSION_COOKIE];
 }
 
-export async function isAdminSessionValid(): Promise<boolean> {
-  const token = getAdminSessionToken();
+export async function isAdminSessionValid(token: string): Promise<boolean> {
   if (!token) return false;
   const db = (process.env as any).DB as any;
   if (!db) return false;
-  const row = await db.prepare("SELECT * FROM admin_sessions WHERE token = ? AND expires_at > ?").bind(token, Math.floor(Date.now() / 1000)).first();
+  const row = await db
+    .prepare("SELECT * FROM admin_sessions WHERE token = ? AND expires_at > ?")
+    .bind(token, Math.floor(Date.now() / 1000))
+    .first();
   return !!row;
 }
 
@@ -69,13 +86,16 @@ export async function deleteAdminSession(token: string): Promise<void> {
   await db.prepare("DELETE FROM admin_sessions WHERE token = ?").bind(token).run();
 }
 
-export async function requireAdmin(request: Request): Promise<{ authenticated: boolean; token?: string }> {
-  const token = getAdminSessionToken();
+export async function requireAdmin(
+  request: Request
+): Promise<{ authenticated: boolean; token?: string; response?: NextResponse }> {
+  const token = getAdminSessionToken(request);
   if (!token) return { authenticated: false };
-  const valid = await isAdminSessionValid();
+  const valid = await isAdminSessionValid(token);
   if (!valid) {
-    clearAdminSession();
-    return { authenticated: false };
+    const response = NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    clearAdminSession(response);
+    return { authenticated: false, response };
   }
   return { authenticated: true, token };
 }
@@ -88,7 +108,12 @@ export async function getStoreSettings(): Promise<Record<string, string>> {
   }
 }
 
-export async function getStoreFeeSettings(): Promise<{ homeDeliveryFee: number; stopDeskFee: number; freeShippingThreshold: number; whatsapp: string }> {
+export async function getStoreFeeSettings(): Promise<{
+  homeDeliveryFee: number;
+  stopDeskFee: number;
+  freeShippingThreshold: number;
+  whatsapp: string;
+}> {
   const settings = await getStoreSettings();
   return {
     homeDeliveryFee: Number(settings.home_delivery_fee || 500),

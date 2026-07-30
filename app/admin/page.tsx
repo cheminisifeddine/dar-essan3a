@@ -1,13 +1,30 @@
+"use client";
 export const runtime = "edge";
-export const dynamic = "force-dynamic";
 
-import { getStats, listOrders, listProducts } from "@/lib/db";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-export default async function AdminDashboardPage() {
-  const stats = await getStats();
-  const recentOrders = await listOrders(5, 0);
-  const products = await listProducts(false);
+export default function AdminDashboardPage() {
+  const [stats, setStats] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/admin/stats").then((r) => r.json()),
+      fetch("/api/admin/orders?limit=5").then((r) => r.json()),
+      fetch("/api/admin/products").then((r) => r.json()),
+    ]).then(([statsData, ordersData, productsData]) => {
+      setStats(statsData.stats || null);
+      setOrders(ordersData.orders || []);
+      setProducts(productsData.products || []);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <p className="text-muted">جارٍ التحميل…</p>;
+  if (!stats) return <p className="text-muted">لا توجد بيانات</p>;
 
   return (
     <div>
@@ -38,8 +55,8 @@ export default async function AdminDashboardPage() {
             <Link href="/admin/orders" className="text-gold hover:underline text-sm">عرض الكل</Link>
           </div>
           <div className="space-y-3">
-            {recentOrders.length === 0 && <p className="text-muted text-center py-4">لا توجد طلبات بعد</p>}
-            {recentOrders.map((order) => (
+            {orders.length === 0 && <p className="text-muted text-center py-4">لا توجد طلبات بعد</p>}
+            {orders.map((order) => (
               <div key={order.id} className="flex items-center justify-between p-3 bg-cream rounded-lg">
                 <div>
                   <p className="font-medium">#{order.id} — {order.customer_name}</p>

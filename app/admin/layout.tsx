@@ -1,19 +1,9 @@
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import Link from "next/link";
+"use client";
+export const runtime = "edge";
 
-async function isAuthenticated() {
-  const token = cookies().get("admin_session")?.value;
-  if (!token) return false;
-  try {
-    const db = (process.env as any).DB as any;
-    if (!db) return false;
-    const row = await db.prepare("SELECT * FROM admin_sessions WHERE token = ? AND expires_at > ?").bind(token, Math.floor(Date.now() / 1000)).first();
-    return !!row;
-  } catch {
-    return false;
-  }
-}
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const nav = [
   { href: "/admin", label: "لوحة التحكم" },
@@ -23,10 +13,35 @@ const nav = [
   { href: "/admin/settings", label: "الإعدادات" },
 ];
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const auth = await isAuthenticated();
-  if (!auth) {
-    redirect("/admin/login");
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [auth, setAuth] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.authenticated) {
+          router.push("/admin/login");
+        } else {
+          setAuth(true);
+        }
+      })
+      .catch(() => router.push("/admin/login"));
+  }, [router]);
+
+  async function handleLogout(e: React.FormEvent) {
+    e.preventDefault();
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.push("/admin/login");
+  }
+
+  if (auth !== true) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center font-tajawal text-muted">
+        <p>جارٍ التحقق…</p>
+      </div>
+    );
   }
 
   return (
@@ -47,7 +62,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 {item.label}
               </Link>
             ))}
-            <form action="/api/admin/logout" method="POST" className="mt-6">
+            <form onSubmit={handleLogout} className="mt-6">
               <button
                 type="submit"
                 className="w-full text-right px-4 py-3 rounded-lg text-terracotta hover:bg-terracotta/10 transition-colors"

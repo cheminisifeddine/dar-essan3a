@@ -15,8 +15,9 @@ export async function POST(request: Request) {
     }
     const token = generateToken();
     await createAdminSession(token);
-    setAdminSession(token);
-    return NextResponse.json({ success: true, message: "Logged in" });
+    const response = NextResponse.json({ success: true, message: "Logged in" });
+    setAdminSession(response, token);
+    return response;
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
