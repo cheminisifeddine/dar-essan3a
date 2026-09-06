@@ -24,6 +24,7 @@ import WhatsAppFloat from "../../components/WhatsAppFloat";
 import StickyCTA from "../../components/StickyCTA";
 import StoreThemeStyle from "../../components/StoreThemeStyle";
 import StorePixel from "../../components/StorePixel";
+import NaturalGuarantee from "../../components/NaturalGuarantee";
 
 type LandingCopy = {
   badge: string;
@@ -219,6 +220,7 @@ export default async function LandingPage({
   if (!product) notFound();
   const store = await resolveStore(searchParams?.store, product.store_id);
   const copy = LANDING_COPY[product.slug] || fallbackCopy(product);
+  const isNaturalStore = !!store.subdomain && store.subdomain !== "main";
   const priceText = formatPrice(product.price);
   const homeDelivery = store.home_delivery_fee ?? 500;
   const stopdesk = store.stopdesk_fee ?? 350;
@@ -446,6 +448,13 @@ export default async function LandingPage({
         </section>
 
         {/* GUARANTEE */}
+        {isNaturalStore ? (
+          <section className="py-14 md:py-20">
+            <div className="container mx-auto px-4 max-w-3xl">
+              <NaturalGuarantee productName={store.name} />
+            </div>
+          </section>
+        ) : (
         <section className="bg-gold/10 py-14 md:py-16">
           <div className="container mx-auto px-4 max-w-2xl text-center">
             <h2 className="font-amiri text-2xl md:text-4xl text-deepgreen mb-6">اطلب وأنت مرتاح 🤍</h2>
@@ -465,6 +474,7 @@ export default async function LandingPage({
             </div>
           </div>
         </section>
+        )}
 
         {/* FAQ */}
         <section id="faq" className="py-14 md:py-20 bg-ivory">

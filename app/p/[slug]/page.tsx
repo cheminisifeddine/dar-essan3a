@@ -17,6 +17,7 @@ import WhatsAppFloat from "../../components/WhatsAppFloat";
 import ProductCard from "../../components/ProductCard";
 import StoreThemeStyle from "../../components/StoreThemeStyle";
 import StorePixel from "../../components/StorePixel";
+import NaturalGuarantee from "../../components/NaturalGuarantee";
 import { getStorePreviewUrl } from "@/lib/store";
 
 async function getProduct(slug: string): Promise<Product | null> {
@@ -182,6 +183,12 @@ export default async function ProductPage({
               <p className="font-tajawal text-muted leading-relaxed mb-6">
                 {product.description}
               </p>
+
+              {product.store_id && product.store_id !== "main" && (
+                <div className="mb-6">
+                  <NaturalGuarantee productName={store.name} />
+                </div>
+              )}
 
               <p className="text-terracotta font-tajawal text-sm mb-6">
                 {product.store_id && product.store_id !== "main"
