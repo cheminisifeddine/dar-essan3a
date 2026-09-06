@@ -16,27 +16,58 @@ export const config = {
 };
 
 export function middleware(request: NextRequest) {
-  // TEMP-TEST: original logic only (no rewrite) to isolate index document 404
-  const url = request.nextUrl;
+  const url = request.nextUrl.clone();
   const host = request.headers.get("host") || "";
-  let subdomain = url.searchParams.get("store");
-  if (!subdomain) {
-    subdomain = extractSubdomain(host);
-  } else {
-    subdomain = subdomain.toLowerCase().trim();
-  }
+
+  // Explicit ?store= wins (preview links); otherwise resolve from host.
+  const explicit = url.searchParams.get("store");
+  let subdomain = explicit ? explicit.toLowerCase().trim() : extractSubdomain(host);
+  if (!subdomain) subdomain = "main";
+
+  // Clone headers and inject resolved subdomain (API routes read this).
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-store-subdomain", subdomain || "main");
+  requestHeaders.set("x-store-subdomain", subdomain);
+
+  const isApi = url.pathname.startsWith("/api/");
+  const isAdmin = url.pathname.startsWith("/admin");
+
+  // The bare "/" path is rewritten to the nested store route /s/<subdomain>
+  // so the correct store server-renders on FIRST paint (no flash of the
+  // wrong store). The browser URL stays unchanged. Applies to every store
+  // including main, and preserves any other query params.
+  if (url.pathname === "/" && !isApi && !isAdmin) {
+    const target = new URL(`/s/${encodeURIComponent(subdomain)}`, url);
+    url.searchParams.forEach((value, key) => {
+      if (key !== "store") target.searchParams.set(key, value);
+    });
+    const response = NextResponse.rewrite(target, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+    if (subdomain !== "main") {
+      response.cookies.set("store_subdomain", subdomain, {
+        path: "/",
+        sameSite: "lax",
+      });
+    }
+    return response;
+  }
+
+  // Pass down the request with modified headers
   const response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
-  if (subdomain && subdomain !== "main") {
+
+  // Also set cookie so client-side navigation can remember active store if visited directly
+  if (subdomain !== "main") {
     response.cookies.set("store_subdomain", subdomain, {
       path: "/",
       sameSite: "lax",
     });
   }
+
   return response;
 }

@@ -1,8 +1,3 @@
-export const runtime = "edge";
-// NOTE: no `dynamic = "force-dynamic"` — reading searchParams below already
-// opts this route into dynamic rendering (same pattern as /p/[slug], /l/[slug]).
-
-import type { Metadata } from "next";
 import AnnouncementBar from "./components/AnnouncementBar";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
@@ -15,47 +10,16 @@ import FinalCTA from "./components/FinalCTA";
 import Footer from "./components/Footer";
 import WhatsAppFloat from "./components/WhatsAppFloat";
 import StoreThemeStyle from "./components/StoreThemeStyle";
-import { normalizeApiProduct, STORE } from "./data/products";
-import {
-  getStoreBySubdomain,
-  getDefaultStore,
-  listProducts,
-  Store,
-} from "@/lib/db";
+import { products as staticProducts } from "./data/products";
+import { DEFAULT_STORE } from "@/lib/store";
 
-// Server-side store resolution: middleware rewrites host-based visits
-// (sante.darelsanaa.com/...) to include ?store=sante internally, so the
-// FIRST paint already renders the correct store — no flash of the main site.
-async function resolveStore(storeParam?: string | string[]): Promise<Store> {
-  try {
-    const sub = Array.isArray(storeParam) ? storeParam[0] : storeParam;
-    if (sub) {
-      const s = await getStoreBySubdomain(sub.toLowerCase().trim());
-      if (s) return s;
-    }
-    return await getDefaultStore();
-  } catch {
-    return await getDefaultStore();
-  }
-}
-
-export default async function Home({
-  searchParams,
-}: {
-  searchParams?: { store?: string | string[] };
-}) {
-  const store = await resolveStore(searchParams?.store);
-  const storeKey = store.subdomain && store.subdomain !== "main" ? store.subdomain : "main";
-
-  // Strict separation: only this store's products (+ shared 'all').
-  let products: ReturnType<typeof normalizeApiProduct>[] = [];
-  try {
-    const dbProducts = await listProducts(true, storeKey);
-    products = dbProducts.map(normalizeApiProduct);
-  } catch {
-    products = [];
-  }
-
+// Static fallback for the bare "/" path. In production the middleware
+// rewrites "/" to "/s/<subdomain>" before rendering, so visitors always
+// get the server-rendered store page on first paint. This static version
+// only serves direct un-rewritten hits (fully prerendered, never flashes
+// wrong content because it never swaps stores client-side).
+export default function Home() {
+  const store = DEFAULT_STORE;
   return (
     <>
       <StoreThemeStyle store={store} />
@@ -64,7 +28,7 @@ export default async function Home({
       <main>
         <Hero store={store} />
         <TrustBar store={store} />
-        <ProductGrid products={products} />
+        <ProductGrid products={staticProducts} />
         <BrandStory store={store} />
         <HowToOrder />
         <FAQ store={store} />
