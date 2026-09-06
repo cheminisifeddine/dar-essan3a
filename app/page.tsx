@@ -39,48 +39,6 @@ async function resolveStore(storeParam?: string | string[]): Promise<Store> {
   }
 }
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams?: { store?: string | string[] };
-}): Promise<Metadata> {
-  const store = await resolveStore(searchParams?.store);
-  if (!store.subdomain || store.subdomain === "main") {
-    return {
-      title: "دار الصنعة — منتجات تقليدية جزائرية أصلية من بوسعادة",
-      description:
-        "قطع تقليدية جزائرية أصيلة من بوسعادة: نسيج النخيل، الفخار، النحاس، واللوحات. توصيل لـ 58 ولاية، والدفع عند الاستلام.",
-      openGraph: {
-        title: "دار الصنعة — منتجات تقليدية جزائرية أصلية من بوسعادة",
-        description:
-          "قطع تقليدية جزائرية أصيلة من بوسعادة، توصيل لكل ولايات الوطن، الدفع عند الاستلام.",
-        url: `https://${STORE.domain}`,
-        type: "website",
-        locale: "ar_DZ",
-        images: [`https://${STORE.domain}/images/logo.webp`],
-      },
-    };
-  }
-  const domain = `${store.subdomain}.${STORE.domain}`;
-  const title = store.meta_title || `${store.name} — ${store.hero_title || ""}`.trim();
-  const description =
-    store.meta_description ||
-    store.hero_subtitle ||
-    `${store.name} — منتجات طبيعية مختارة. توصيل لـ 58 ولاية والدفع عند الاستلام.`;
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url: `https://${domain}`,
-      type: "website",
-      locale: "ar_DZ",
-      images: [store.logo_url ? `https://${domain}${store.logo_url}` : `https://${domain}/images/logo.webp`],
-    },
-  };
-}
-
 export default async function Home({
   searchParams,
 }: {
