@@ -29,7 +29,7 @@ export function NaturalGuarantee({ productName }: { productName?: string }) {
       <div className="text-center mb-6">
         <div className="text-4xl mb-2">✅</div>
         <h3 className="font-amiri text-2xl md:text-3xl text-gold font-bold">
-          ضمان {name}
+          {`ضمان ${name}`}
         </h3>
         <p className="font-tajawal text-cream/80 text-sm mt-2">
           وصفة طبيعية، آمنة، وفعّالة — أو لا تدفع شيئاً عند الاستلام
