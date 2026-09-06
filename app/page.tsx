@@ -1,5 +1,6 @@
 export const runtime = "edge";
-export const dynamic = "force-dynamic";
+// NOTE: no `dynamic = "force-dynamic"` — reading searchParams below already
+// opts this route into dynamic rendering (same pattern as /p/[slug], /l/[slug]).
 
 import type { Metadata } from "next";
 import AnnouncementBar from "./components/AnnouncementBar";
