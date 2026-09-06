@@ -14,8 +14,8 @@ import {
   getStoreBySubdomain,
   getStoreById,
   getDefaultStore,
-  Store,
 } from "@/lib/db";
+import type { Store } from "@/lib/db";
 import AnnouncementBar from "../../components/AnnouncementBar";
 import Header from "../../components/Header";
 import OrderForm from "../../components/OrderForm";
@@ -23,6 +23,7 @@ import LandingFAQ from "../../components/LandingFAQ";
 import WhatsAppFloat from "../../components/WhatsAppFloat";
 import StickyCTA from "../../components/StickyCTA";
 import StoreThemeStyle from "../../components/StoreThemeStyle";
+import StorePixel from "../../components/StorePixel";
 
 type LandingCopy = {
   badge: string;
@@ -225,6 +226,7 @@ export default async function LandingPage({
   return (
     <>
       <StoreThemeStyle store={store} />
+      <StorePixel pixelId={store.pixel_id} />
       <AnnouncementBar store={store} />
       <Header store={store} />
       <main className="bg-cream">

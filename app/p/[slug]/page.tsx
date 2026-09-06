@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { normalizeApiProduct, Product, STORE, formatPrice, products as staticProducts } from "../../data/products";
-import { getProductBySlug, getStoreBySubdomain, getStoreById, getDefaultStore, Store } from "@/lib/db";
+import { getProductBySlug, getStoreBySubdomain, getStoreById, getDefaultStore } from "@/lib/db";
+import type { Store } from "@/lib/db";
 import AnnouncementBar from "../../components/AnnouncementBar";
 import Header from "../../components/Header";
 import TrustBar from "../../components/TrustBar";
@@ -15,6 +16,7 @@ import Footer from "../../components/Footer";
 import WhatsAppFloat from "../../components/WhatsAppFloat";
 import ProductCard from "../../components/ProductCard";
 import StoreThemeStyle from "../../components/StoreThemeStyle";
+import StorePixel from "../../components/StorePixel";
 import { getStorePreviewUrl } from "@/lib/store";
 
 async function getProduct(slug: string): Promise<Product | null> {
@@ -101,6 +103,7 @@ export default async function ProductPage({
   return (
     <>
       <StoreThemeStyle store={store} />
+      <StorePixel pixelId={store.pixel_id} />
       <AnnouncementBar store={store} />
       <Header store={store} />
       <main className="bg-cream pb-16">

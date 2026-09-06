@@ -13,13 +13,14 @@ import FinalCTA from "../../components/FinalCTA";
 import Footer from "../../components/Footer";
 import WhatsAppFloat from "../../components/WhatsAppFloat";
 import StoreThemeStyle from "../../components/StoreThemeStyle";
+import StorePixel from "../../components/StorePixel";
 import { normalizeApiProduct, STORE } from "../../data/products";
 import {
   getStoreBySubdomain,
   getDefaultStore,
   listProducts,
-  Store,
 } from "@/lib/db";
+import type { Store } from "@/lib/db";
 
 // Storefront homepage for a specific store: /s/main, /s/sante, ...
 // Served when middleware rewrites a host-based visit (e.g.
@@ -100,6 +101,7 @@ export default async function StoreHome({
   return (
     <>
       <StoreThemeStyle store={store} />
+      <StorePixel pixelId={store.pixel_id} />
       <AnnouncementBar store={store} />
       <Header store={store} />
       <main>
