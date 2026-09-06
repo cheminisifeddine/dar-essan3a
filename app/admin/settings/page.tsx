@@ -16,6 +16,10 @@ const defaultSettings = {
   meta_description: "قطع تقليدية جزائرية أصيلة من بوسعادة: نسيج النخيل، الفخار، النحاس، واللوحات. توصيل لـ 58 ولاية، والدفع عند الاستلام.",
   announcement_bar: "الدفع عند الاستلام 💵 | توصيل لـ 58 ولاية 🚚 | صناعة يدوية 100% من بوسعادة 🤲",
   r2_public_url: "https://pub-ecabff8d21801908882cdb68b6fb1363.r2.dev",
+  META_ACCESS_TOKEN: "",
+  META_AD_ACCOUNT_ID: "act_2496127677527571",
+  META_PAGE_ID: "1169740916230446",
+  META_PIXEL_ID: "1459121952706477",
 };
 
 export default function AdminSettingsPage() {
@@ -75,6 +79,12 @@ export default function AdminSettingsPage() {
         <input placeholder="رقم واتساب" value={settings.whatsapp_number} onChange={(e) => setSettings({ ...settings, whatsapp_number: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-2" dir="ltr" />
         <input placeholder="Pixel ID" value={settings.pixel_id} onChange={(e) => setSettings({ ...settings, pixel_id: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-2" dir="ltr" />
         <input placeholder="R2 Public URL" value={settings.r2_public_url} onChange={(e) => setSettings({ ...settings, r2_public_url: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-2" dir="ltr" />
+
+        <h3 className="font-amiri text-xl text-deepgreen pt-4">إعلانات فيسبوك (FB Ads — يملؤها الوكيل تلقائياً)</h3>
+        <input placeholder="META_ACCESS_TOKEN (EAA...)" type="password" value={settings.META_ACCESS_TOKEN || ""} onChange={(e) => setSettings({ ...settings, META_ACCESS_TOKEN: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-2" dir="ltr" />
+        <input placeholder="META_AD_ACCOUNT_ID (act_...)" value={settings.META_AD_ACCOUNT_ID || ""} onChange={(e) => setSettings({ ...settings, META_AD_ACCOUNT_ID: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-2" dir="ltr" />
+        <input placeholder="META_PAGE_ID" value={settings.META_PAGE_ID || ""} onChange={(e) => setSettings({ ...settings, META_PAGE_ID: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-2" dir="ltr" />
+        <input placeholder="META_PIXEL_ID" value={settings.META_PIXEL_ID || ""} onChange={(e) => setSettings({ ...settings, META_PIXEL_ID: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-2" dir="ltr" />
 
         <h3 className="font-amiri text-xl text-deepgreen pt-4">الصفحة الرئيسية</h3>
         <input placeholder="عنوان Hero" value={settings.hero_title} onChange={(e) => setSettings({ ...settings, hero_title: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-2" />
