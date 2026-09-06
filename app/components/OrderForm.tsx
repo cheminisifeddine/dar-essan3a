@@ -6,6 +6,7 @@ import {
   STORE,
   formatPrice,
 } from "../data/products";
+import { Store } from "@/lib/db";
 import { trackEvent } from "./PixelEvents";
 import LocationSelect from "./LocationSelect";
 
@@ -36,9 +37,11 @@ function getUtmString(): string {
 
 export function OrderForm({
   initialProduct,
+  store,
   onSuccess,
 }: {
   initialProduct?: Product;
+  store?: Partial<Store> | null;
   onSuccess?: () => void;
 }) {
   const product = initialProduct!;
@@ -53,9 +56,13 @@ export function OrderForm({
   const [done, setDone] = useState(false);
   const [orderId, setOrderId] = useState("");
 
+  const homeFee = store?.home_delivery_fee ?? STORE.homeDeliveryFee;
+  const stopdeskFee = store?.stopdesk_fee ?? STORE.stopDeskFee;
+  const freeThreshold = store?.free_shipping_threshold ?? STORE.freeShippingThreshold;
+
   const subtotal = product.price * quantity;
-  const isFreeShipping = subtotal >= STORE.freeShippingThreshold;
-  const shipping = isFreeShipping ? 0 : deliveryType === "home" ? STORE.homeDeliveryFee : STORE.stopDeskFee;
+  const isFreeShipping = subtotal >= freeThreshold;
+  const shipping = isFreeShipping ? 0 : deliveryType === "home" ? homeFee : stopdeskFee;
   const total = subtotal + shipping;
 
   async function handleSubmit(e: React.FormEvent) {
@@ -105,6 +112,7 @@ export function OrderForm({
           total,
           shippingFee: shipping,
           utm: getUtmString(),
+          storeId: store?.subdomain || store?.id || "main",
         }),
       });
       const data = await res.json();

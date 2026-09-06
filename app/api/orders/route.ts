@@ -2,11 +2,12 @@ export const runtime = "edge";
 
 import { NextResponse } from "next/server";
 import { createOrder, getProductById } from "@/lib/db";
+import { extractSubdomain } from "@/lib/store";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, phone, wilaya, city, address, deliveryType, items, total, shippingFee, utm } = body;
+    const { name, phone, wilaya, city, address, deliveryType, items, total, shippingFee, utm, storeId, store_id } = body;
 
     if (!name || !phone || !wilaya || !city || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
@@ -18,6 +19,14 @@ export async function POST(request: Request) {
     }
 
     const orderId = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Resolve store
+    const resolvedStore =
+      store_id ||
+      storeId ||
+      request.headers.get("x-store-subdomain") ||
+      extractSubdomain(request.headers.get("host")) ||
+      "main";
 
     const orderItems = [];
     let calculatedTotal = 0;
@@ -51,6 +60,7 @@ export async function POST(request: Request) {
         total: finalTotal,
         status: "pending",
         source_utm: utm || "",
+        store_id: resolvedStore,
       },
       orderItems
     );
@@ -60,6 +70,7 @@ export async function POST(request: Request) {
       orderId,
       message: "Order received successfully",
       total: finalTotal,
+      storeId: resolvedStore,
     });
   } catch (error: any) {
     console.error("Order error:", error);

@@ -1,11 +1,13 @@
 "use client";
 export const runtime = "edge";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Store } from "@/lib/db";
 
 export default function NewProductPage() {
   const router = useRouter();
+  const [stores, setStores] = useState<Store[]>([]);
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -17,9 +19,21 @@ export default function NewProductPage() {
     images: [] as string[],
     active: true,
     sort_order: "0",
+    store_id: "main",
   });
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/stores")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.stores)) {
+          setStores(data.stores);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function uploadFile(file: File) {
     setUploading(true);
@@ -57,6 +71,26 @@ export default function NewProductPage() {
     <div>
       <h2 className="font-amiri text-3xl text-deepgreen mb-6">منتج جديد</h2>
       <form onSubmit={handleSubmit} className="bg-ivory rounded-xl p-6 shadow-soft border border-gold/10 max-w-3xl space-y-4">
+        {/* Store Selection */}
+        <div>
+          <label className="block text-sm text-muted mb-1 font-bold">المتجر التابع له المنتج</label>
+          <select
+            value={form.store_id}
+            onChange={(e) => setForm({ ...form, store_id: e.target.value })}
+            className="w-full border border-gold/30 rounded-xl px-4 py-3 bg-white"
+          >
+            <option value="main">المتجر الرئيسي (دار الصنعة — darelsanaa.com)</option>
+            {stores
+              .filter((s) => s.id !== "main")
+              .map((s) => (
+                <option key={s.id} value={s.subdomain}>
+                  {s.name} ({s.subdomain}.darelsanaa.com)
+                </option>
+              ))}
+            <option value="all">متاح في جميع المتاجر</option>
+          </select>
+        </div>
+
         <input placeholder="اسم المنتج" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-3" required />
         <input placeholder="Slug (بالإنجليزية)" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-3" dir="ltr" required />
         <input placeholder="جملة افتتاحية" value={form.hook} onChange={(e) => setForm({ ...form, hook: e.target.value })} className="w-full border border-gold/30 rounded-xl px-4 py-3" />

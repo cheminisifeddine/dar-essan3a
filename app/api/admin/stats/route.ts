@@ -10,7 +10,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const stats = await getStats();
+    const url = new URL(request.url);
+    const store = url.searchParams.get("store") || url.searchParams.get("store_id") || undefined;
+    const stats = await getStats(store);
     return NextResponse.json({ success: true, stats });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

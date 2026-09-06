@@ -38,6 +38,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (body.images !== undefined) update.images = Array.isArray(body.images) ? body.images : [];
     if (body.active !== undefined) update.active = body.active ? 1 : 0;
     if (body.sort_order !== undefined) update.sort_order = Number(body.sort_order);
+    if (body.store_id !== undefined) update.store_id = body.store_id;
     await updateProduct(params.id, update);
     return NextResponse.json({ success: true });
   } catch (error: any) {

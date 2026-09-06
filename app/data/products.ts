@@ -23,6 +23,7 @@ export type Product = {
   ogImage: string;
   metaTitle: string;
   metaDescription: string;
+  store_id?: string;
 };
 
 export const products: Product[] = [
@@ -184,6 +185,7 @@ export function normalizeApiProduct(raw: any): Product {
     ogImage: String(raw.og_image || raw.ogImage || ""),
     metaTitle: String(raw.meta_title || raw.metaTitle || raw.name),
     metaDescription: String(raw.meta_description || raw.metaDescription || raw.description || ""),
+    store_id: raw.store_id || raw.storeId || "main",
   };
 }
 

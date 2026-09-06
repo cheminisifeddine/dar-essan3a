@@ -7,6 +7,14 @@
 :root {
   --background: #F7F2E9;
   --foreground: #241F18;
+  --color-bg: #F7F2E9;
+  --color-text: #241F18;
+  --color-primary: #1E3A2A;
+  --color-secondary: #C19A3D;
+  --color-bg-rgb: 247 242 233;
+  --color-text-rgb: 36 31 24;
+  --color-primary-rgb: 30 58 42;
+  --color-secondary-rgb: 193 154 61;
 }
 
 * {
@@ -38,6 +46,7 @@ h1, h2, h3, h4, h5, h6 {
   .section-divider::before,
   .section-divider::after {
     content: "";
-    @apply h-px w-16 bg-gold/40;
+    @apply h-px w-16;
+    background-color: rgb(var(--color-secondary-rgb, 193 154 61) / 0.4);
   }
 }

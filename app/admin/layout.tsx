@@ -6,10 +6,11 @@ import { useRouter, usePathname } from "next/navigation";
 
 const nav = [
   { href: "/admin", label: "لوحة التحكم" },
+  { href: "/admin/stores", label: "المتاجر (Stores)" },
   { href: "/admin/orders", label: "الطلبات" },
   { href: "/admin/products", label: "المنتجات" },
   { href: "/admin/customers", label: "الزبائن" },
-  { href: "/admin/settings", label: "الإعدادات" },
+  { href: "/admin/settings", label: "الإعدادات العامة" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

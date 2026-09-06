@@ -1,9 +1,13 @@
 import { STORE } from "../data/products";
+import { Store } from "@/lib/db";
 
-export function WhatsAppFloat() {
+export function WhatsAppFloat({ store }: { store?: Partial<Store> | null }) {
+  const whatsapp = store?.whatsapp_number || STORE.whatsapp;
+  const storeName = store?.name || STORE.name;
+
   return (
     <a
-      href={`https://wa.me/${STORE.whatsapp}?text=السلام عليكم، أريد الاستفسار عن منتجات دار الصنعة`}
+      href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`السلام عليكم، أريد الاستفسار عن منتجات ${storeName}`)}`}
       target="_blank"
       rel="noreferrer"
       aria-label="تواصل عبر واتساب"

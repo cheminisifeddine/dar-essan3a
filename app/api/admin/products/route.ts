@@ -10,7 +10,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const products = await listProducts(false);
+    const url = new URL(request.url);
+    const storeFilter = url.searchParams.get("store") || url.searchParams.get("store_id") || undefined;
+    const products = await listProducts(false, storeFilter);
     return NextResponse.json({ success: true, products });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
       images: Array.isArray(body.images) ? body.images : [],
       active: body.active === false ? 0 : 1,
       sort_order: Number(body.sort_order || 0),
+      store_id: body.store_id || "main",
     });
     return NextResponse.json({ success: true, id });
   } catch (error: any) {

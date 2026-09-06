@@ -3,11 +3,13 @@ export const runtime = "edge";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { MAIN_DOMAIN } from "@/lib/store";
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,10 +17,12 @@ export default function AdminDashboardPage() {
       fetch("/api/admin/stats").then((r) => r.json()),
       fetch("/api/admin/orders?limit=5").then((r) => r.json()),
       fetch("/api/admin/products").then((r) => r.json()),
-    ]).then(([statsData, ordersData, productsData]) => {
+      fetch("/api/admin/stores").then((r) => r.json()),
+    ]).then(([statsData, ordersData, productsData, storesData]) => {
       setStats(statsData.stats || null);
       setOrders(ordersData.orders || []);
       setProducts(productsData.products || []);
+      setStores(storesData.stores || []);
       setLoading(false);
     });
   }, []);
@@ -28,23 +32,100 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <h2 className="font-amiri text-3xl text-deepgreen mb-6">لوحة التحكم</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-ivory rounded-xl p-6 shadow-soft border border-gold/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h2 className="font-amiri text-3xl text-deepgreen">لوحة التحكم</h2>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/stores/new"
+            className="bg-deepgreen text-gold px-4 py-2 rounded-xl text-sm font-bold hover:bg-deepgreen/90 transition-colors"
+          >
+            + متجر جديد
+          </Link>
+          <Link
+            href="/admin/products/new"
+            className="bg-gold text-deepgreen px-4 py-2 rounded-xl text-sm font-bold hover:bg-gold/90 transition-colors"
+          >
+            + منتج جديد
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="bg-ivory rounded-xl p-5 shadow-soft border border-gold/10">
+          <p className="text-muted text-sm">المتاجر النشطة</p>
+          <p className="font-amiri text-3xl text-deepgreen">{stores.length}</p>
+          <Link href="/admin/stores" className="text-xs text-gold hover:underline mt-1 inline-block">
+            إدارة النطاقات الفرعية ←
+          </Link>
+        </div>
+        <div className="bg-ivory rounded-xl p-5 shadow-soft border border-gold/10">
           <p className="text-muted text-sm">إجمالي الطلبات</p>
           <p className="font-amiri text-3xl text-deepgreen">{stats.totalOrders}</p>
         </div>
-        <div className="bg-ivory rounded-xl p-6 shadow-soft border border-gold/10">
+        <div className="bg-ivory rounded-xl p-5 shadow-soft border border-gold/10">
           <p className="text-muted text-sm">الإيرادات</p>
           <p className="font-amiri text-3xl text-deepgreen">{stats.totalRevenue.toLocaleString("ar-DZ")} دج</p>
         </div>
-        <div className="bg-ivory rounded-xl p-6 shadow-soft border border-gold/10">
+        <div className="bg-ivory rounded-xl p-5 shadow-soft border border-gold/10">
           <p className="text-muted text-sm">طلبات قيد الانتظار</p>
           <p className="font-amiri text-3xl text-terracotta">{stats.pendingOrders}</p>
         </div>
-        <div className="bg-ivory rounded-xl p-6 shadow-soft border border-gold/10">
+        <div className="bg-ivory rounded-xl p-5 shadow-soft border border-gold/10">
           <p className="text-muted text-sm">الزبائن</p>
           <p className="font-amiri text-3xl text-deepgreen">{stats.totalCustomers}</p>
+        </div>
+      </div>
+
+      {/* Stores Overview Bar */}
+      <div className="bg-ivory rounded-xl p-5 shadow-soft border border-gold/10 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-amiri text-xl text-deepgreen">المتاجر المتعددة (Subdomains)</h3>
+          <Link href="/admin/stores" className="text-gold hover:underline text-sm font-bold">
+            عرض وتخصيص كل المتاجر ←
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {stores.map((s) => {
+            const isMain = s.subdomain === "main";
+            const sub = isMain ? MAIN_DOMAIN : `${s.subdomain}.${MAIN_DOMAIN}`;
+            const previewUrl = isMain ? "/" : `/?store=${encodeURIComponent(s.subdomain)}`;
+            return (
+              <div
+                key={s.id}
+                className="bg-cream rounded-xl p-4 border border-gold/15 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-deepgreen text-sm">{s.name}</span>
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-black/10"
+                      style={{ backgroundColor: s.primary_color }}
+                      title={`اللون الأساسي: ${s.primary_color}`}
+                    />
+                  </div>
+                  <span className="font-mono text-xs text-muted block mb-3" dir="ltr">
+                    {sub}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 pt-2 border-t border-gold/10 text-xs">
+                  <Link
+                    href={`/admin/stores/${s.id}/edit`}
+                    className="text-gold hover:underline font-bold"
+                  >
+                    تعديل الألوان
+                  </Link>
+                  <span className="text-muted">|</span>
+                  <Link
+                    href={previewUrl}
+                    target="_blank"
+                    className="text-deepgreen hover:underline"
+                  >
+                    معاينة المتجر ↗
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

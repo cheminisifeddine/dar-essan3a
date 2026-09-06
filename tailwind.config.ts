@@ -9,12 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        cream: "#F7F2E9",
+        cream: "rgb(var(--color-bg-rgb, 247 242 233) / <alpha-value>)",
         ivory: "#FFFDF7",
-        ink: "#241F18",
+        ink: "rgb(var(--color-text-rgb, 36 31 24) / <alpha-value>)",
         muted: "#6B6256",
-        deepgreen: "#1E3A2A",
-        gold: "#C19A3D",
+        deepgreen: "rgb(var(--color-primary-rgb, 30 58 42) / <alpha-value>)",
+        gold: "rgb(var(--color-secondary-rgb, 193 154 61) / <alpha-value>)",
         terracotta: "#B4552D",
       },
       fontFamily: {

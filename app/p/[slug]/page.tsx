@@ -4,9 +4,8 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { normalizeApiProduct, Product, STORE, formatPrice } from "../../data/products";
-
-const API_BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://darelsanaa.com";
+import { normalizeApiProduct, Product, STORE, formatPrice, products as staticProducts } from "../../data/products";
+import { getProductBySlug, getStoreBySubdomain, getStoreById, getDefaultStore, Store } from "@/lib/db";
 import AnnouncementBar from "../../components/AnnouncementBar";
 import Header from "../../components/Header";
 import TrustBar from "../../components/TrustBar";
@@ -15,76 +14,92 @@ import FAQ from "../../components/FAQ";
 import Footer from "../../components/Footer";
 import WhatsAppFloat from "../../components/WhatsAppFloat";
 import ProductCard from "../../components/ProductCard";
+import StoreThemeStyle from "../../components/StoreThemeStyle";
+import { getStorePreviewUrl } from "@/lib/store";
 
 async function getProduct(slug: string): Promise<Product | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/products/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 60 },
-    });
-    const data = await res.json();
-    if (data.success && data.product) return normalizeApiProduct(data.product);
+    const dbProduct = await getProductBySlug(slug);
+    if (dbProduct) return normalizeApiProduct(dbProduct);
   } catch (e) {
-    console.error("Failed to load product:", e);
+    // fallback to static list
   }
-  return null;
+  const staticFound = staticProducts.find((p) => p.slug === slug);
+  return staticFound ? normalizeApiProduct(staticFound) : null;
 }
 
-async function getAllProducts(): Promise<Product[]> {
+async function resolveStoreForPage(storeParam?: string, productStoreId?: string): Promise<Store> {
   try {
-    const res = await fetch(`${API_BASE}/api/products`, { next: { revalidate: 60 } });
-    const data = await res.json();
-    if (data.success && Array.isArray(data.products)) {
-      return data.products.map(normalizeApiProduct);
+    if (storeParam) {
+      const s = await getStoreBySubdomain(storeParam);
+      if (s) return s;
     }
-  } catch (e) {
-    console.error("Failed to load products:", e);
+    if (productStoreId && productStoreId !== "main" && productStoreId !== "all") {
+      const s = (await getStoreBySubdomain(productStoreId)) || (await getStoreById(productStoreId));
+      if (s) return s;
+    }
+    return await getDefaultStore();
+  } catch {
+    return await getDefaultStore();
   }
-  return [];
 }
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: { slug: string };
+  searchParams?: { store?: string };
 }): Promise<Metadata> {
   const product = await getProduct(params.slug);
   if (!product) return {};
+  const store = await resolveStoreForPage(searchParams?.store, product.store_id);
+  const domain = store.subdomain === "main" ? STORE.domain : `${store.subdomain}.${STORE.domain}`;
+
   return {
-    title: product.metaTitle,
+    title: `${product.metaTitle} — ${store.name}`,
     description: product.metaDescription,
     openGraph: {
-      title: product.metaTitle,
+      title: `${product.metaTitle} — ${store.name}`,
       description: product.metaDescription,
-      url: `https://${STORE.domain}/p/${product.slug}`,
+      url: `https://${domain}/p/${product.slug}`,
       type: "website",
       locale: "ar_DZ",
-      images: [`https://${STORE.domain}${product.ogImage}`],
+      images: [`https://${domain}${product.ogImage}`],
     },
   };
 }
 
 export default async function ProductPage({
   params,
+  searchParams,
 }: {
   params: { slug: string };
+  searchParams?: { store?: string };
 }) {
   const product = await getProduct(params.slug);
   if (!product) notFound();
 
-  const allProducts = await getAllProducts();
-  const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
+  const store = await resolveStoreForPage(searchParams?.store, product.store_id);
+  const homeHref = store.subdomain && store.subdomain !== "main" ? getStorePreviewUrl(store.subdomain, "/") : "/";
+
+  // Related products
+  const related = staticProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   return (
     <>
-      <AnnouncementBar />
-      <Header />
+      <StoreThemeStyle store={store} />
+      <AnnouncementBar store={store} />
+      <Header store={store} />
       <main className="bg-cream pb-16">
         <TrustBar compact />
         <section className="container mx-auto px-4 py-8 md:py-12">
           {/* Breadcrumb */}
-          <div className="font-tajawal text-sm text-muted mb-6">
-            <Link href="/" className="hover:text-gold">الرئيسية</Link>
-            <span className="mx-2">/</span>
+          <div className="font-tajawal text-sm text-muted mb-6 flex items-center gap-2">
+            <Link href={homeHref} className="hover:text-gold">
+              {store.name}
+            </Link>
+            <span>/</span>
             <span className="text-ink">{product.name}</span>
           </div>
 
@@ -157,7 +172,7 @@ export default async function ProductPage({
                 ⚠️ الكمية محدودة — منتجات يدوية تُصنع بعدد قليل
               </p>
 
-              <OrderForm initialProduct={product} />
+              <OrderForm initialProduct={product} store={store} />
             </div>
           </div>
         </section>
@@ -178,8 +193,8 @@ export default async function ProductPage({
           </section>
         )}
       </main>
-      <Footer />
-      <WhatsAppFloat />
+      <Footer store={store} />
+      <WhatsAppFloat store={store} />
     </>
   );
 }
