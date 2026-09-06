@@ -1,11 +1,22 @@
-const items = [
+import { Store } from "@/lib/db";
+
+const mainItems = [
   { icon: "💵", label: "الدفع عند الاستلام" },
   { icon: "🚚", label: "توصيل لجميع الولايات" },
   { icon: "🤲", label: "صناعة يدوية أصلية" },
   { icon: "✨", label: "جودة مضمونة" },
 ];
 
-export function TrustBar({ compact = false }: { compact?: boolean }) {
+const naturalItems = [
+  { icon: "💵", label: "الدفع عند الاستلام" },
+  { icon: "🚚", label: "توصيل لجميع الولايات" },
+  { icon: "🌿", label: "مكونات طبيعية 100%" },
+  { icon: "🇩🇿", label: "منتج جزائري" },
+];
+
+export function TrustBar({ compact = false, store }: { compact?: boolean; store?: Partial<Store> | null }) {
+  const isNatural = !!store?.subdomain && store.subdomain !== "main";
+  const items = isNatural ? naturalItems : mainItems;
   return (
     <div className="bg-ivory border-y border-gold/10 py-5">
       <div className="container mx-auto px-4">

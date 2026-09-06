@@ -33,8 +33,11 @@ export function Footer({ store }: { store?: Partial<Store> | null }) {
               <Link href="/#products" className="text-cream/80 hover:text-gold transition-colors">المنتجات</Link>
               <Link href="/#how-to-order" className="text-cream/80 hover:text-gold transition-colors">كيف تطلب</Link>
               <Link href="/#faq" className="text-cream/80 hover:text-gold transition-colors">الأسئلة الشائعة</Link>
-              <Link href="/p/chapeau-palmier" className="text-cream/80 hover:text-gold transition-colors">قبعة النخيل</Link>
-              <Link href="/p/qolla-tissage" className="text-cream/80 hover:text-gold transition-colors">قلة بوسعادة</Link>
+              {isCustomStore ? (
+                <Link href="/#products" className="text-cream/80 hover:text-gold transition-colors">اطلب الآن — الدفع عند الاستلام</Link>
+              ) : (
+                <Link href="/chapeau-ete" className="text-cream/80 hover:text-gold transition-colors">عرض الصيف</Link>
+              )}
             </div>
           </div>
 

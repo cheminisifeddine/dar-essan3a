@@ -72,11 +72,11 @@ export default function Home() {
       <Header store={store} />
       <main>
         <Hero store={store} />
-        <TrustBar />
+        <TrustBar store={store} />
         <ProductGrid products={products} />
-        <BrandStory />
+        <BrandStory store={store} />
         <HowToOrder />
-        <FAQ />
+        <FAQ store={store} />
         <FinalCTA store={store} />
       </main>
       <Footer store={store} />

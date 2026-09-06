@@ -25,19 +25,9 @@ export function Header({ store }: { store?: Partial<Store> | null }) {
             />
           </div>
           <div className="hidden sm:block">
-            <div className="flex items-center gap-2">
-              <h1 className="font-amiri text-2xl text-deepgreen leading-none">
-                {storeName}
-              </h1>
-              {subdomain && subdomain !== "main" && (
-                <span className="font-mono text-[10px] bg-gold/15 text-deepgreen px-2 py-0.5 rounded font-bold" dir="ltr">
-                  {subdomain}.darelsanaa.com
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-muted font-tajawal leading-none mt-1 line-clamp-1 max-w-xs">
-              {store?.hero_subtitle || "من بوسعادة… إلى بيتك"}
-            </p>
+            <h1 className="font-amiri text-2xl text-deepgreen leading-none">
+              {storeName}
+            </h1>
           </div>
         </Link>
 

@@ -4,6 +4,7 @@ import { Product, formatPrice, discountPercent } from "../data/products";
 
 export function ProductCard({ product }: { product: Product }) {
   const disc = discountPercent(product);
+  const isNatural = !!product.store_id && product.store_id !== "main";
   return (
     <div className="group bg-ivory rounded-arch overflow-hidden border border-gold/10 shadow-soft hover:shadow-lg transition-shadow">
       <div className="relative aspect-[4/5] overflow-hidden">
@@ -15,7 +16,7 @@ export function ProductCard({ product }: { product: Product }) {
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         <span className="absolute top-3 right-3 bg-deepgreen/90 text-gold text-xs font-tajawal font-bold px-3 py-1 rounded-full">
-          صناعة يدوية
+          {isNatural ? "🌿 طبيعي 100%" : "صناعة يدوية"}
         </span>
         <span className="absolute top-3 left-3 bg-terracotta text-white text-xs font-tajawal font-bold px-3 py-1 rounded-full">
           -{disc}%

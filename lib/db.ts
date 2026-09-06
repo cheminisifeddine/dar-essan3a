@@ -293,22 +293,14 @@ export async function deleteStore(id: string): Promise<void> {
 export async function listProducts(activeOnly = true, storeId?: string): Promise<Product[]> {
   const db = getDB();
 
-  // If a specific store is requested (other than 'all')
+  // Strict store separation: a store ONLY sees its own products (+ those
+  // explicitly shared with store_id = 'all'). No cross-store leakage.
   if (storeId && storeId !== "all") {
-    // Try to get products specifically tagged with this store or 'all'
-    const specificSql = activeOnly
+    const sql = activeOnly
       ? "SELECT * FROM products WHERE active = 1 AND (store_id = ? OR store_id = 'all') ORDER BY sort_order, name"
       : "SELECT * FROM products WHERE (store_id = ? OR store_id = 'all') ORDER BY sort_order, name";
-    const { results } = await db.prepare(specificSql).bind(storeId).all();
-    if (results && results.length > 0) {
-      return results.map(parseProduct);
-    }
-    // If no products dedicated to this store, fall back to main/shared products
-    const fallbackSql = activeOnly
-      ? "SELECT * FROM products WHERE active = 1 AND (store_id = ? OR store_id = 'main' OR store_id IS NULL) ORDER BY sort_order, name"
-      : "SELECT * FROM products WHERE (store_id = ? OR store_id = 'main' OR store_id IS NULL) ORDER BY sort_order, name";
-    const fallbackRes = await db.prepare(fallbackSql).bind(storeId).all();
-    return (fallbackRes.results || []).map(parseProduct);
+    const { results } = await db.prepare(sql).bind(storeId).all();
+    return (results || []).map(parseProduct);
   }
 
   const sql = activeOnly

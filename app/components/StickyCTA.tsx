@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export function StickyCTA() {
+export function StickyCTA({ priceText, ctaLabel }: { priceText?: string; ctaLabel?: string }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -28,13 +28,13 @@ export function StickyCTA() {
       <div className="bg-deepgreen text-cream px-4 py-3 flex items-center gap-3 shadow-[0_-8px_24px_rgba(0,0,0,0.25)]">
         <div className="flex-1">
           <p className="font-tajawal text-xs text-cream/70 leading-none mb-1">السعر اليوم</p>
-          <p className="font-amiri text-xl text-gold font-bold leading-none">2,790 دج</p>
+          <p className="font-amiri text-xl text-gold font-bold leading-none">{priceText || "2,790 دج"}</p>
         </div>
         <a
           href="#order"
           className="bg-gold text-deepgreen font-tajawal font-bold px-6 py-3 rounded-xl shadow-soft hover:bg-gold/90 transition-colors"
         >
-          اطلبي الآن
+          {ctaLabel || "اطلب الآن"}
         </a>
       </div>
     </div>

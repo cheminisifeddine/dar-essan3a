@@ -3,11 +3,10 @@ export const runtime = "edge";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MAIN_DOMAIN } from "@/lib/store";
 import { useAdminStore, storeDomain } from "./components/AdminStoreContext";
 
 export default function AdminDashboardPage() {
-  const { current, currentStore, stores: ctxStores } = useAdminStore();
+  const { current, currentStore } = useAdminStore();
   const [stats, setStats] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -89,59 +88,6 @@ export default function AdminDashboardPage() {
         <div className="bg-ivory rounded-xl p-5 shadow-soft border border-gold/10">
           <p className="text-muted text-sm">الزبائن</p>
           <p className="font-amiri text-3xl text-deepgreen">{stats.totalCustomers}</p>
-        </div>
-      </div>
-
-      {/* Stores Overview Bar */}
-      <div className="bg-ivory rounded-xl p-5 shadow-soft border border-gold/10 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-amiri text-xl text-deepgreen">المتاجر المتعددة (Subdomains)</h3>
-          <Link href="/admin/stores" className="text-gold hover:underline text-sm font-bold">
-            عرض وتخصيص كل المتاجر ←
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {stores.map((s) => {
-            const isMain = s.subdomain === "main";
-            const sub = isMain ? MAIN_DOMAIN : `${s.subdomain}.${MAIN_DOMAIN}`;
-            const previewUrl = isMain ? "/" : `/?store=${encodeURIComponent(s.subdomain)}`;
-            return (
-              <div
-                key={s.id}
-                className="bg-cream rounded-xl p-4 border border-gold/15 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-deepgreen text-sm">{s.name}</span>
-                    <span
-                      className="w-3.5 h-3.5 rounded-full border border-black/10"
-                      style={{ backgroundColor: s.primary_color }}
-                      title={`اللون الأساسي: ${s.primary_color}`}
-                    />
-                  </div>
-                  <span className="font-mono text-xs text-muted block mb-3" dir="ltr">
-                    {sub}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-gold/10 text-xs">
-                  <Link
-                    href={`/admin/stores/${s.id}/edit`}
-                    className="text-gold hover:underline font-bold"
-                  >
-                    تعديل الألوان
-                  </Link>
-                  <span className="text-muted">|</span>
-                  <Link
-                    href={previewUrl}
-                    target="_blank"
-                    className="text-deepgreen hover:underline"
-                  >
-                    معاينة المتجر ↗
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 

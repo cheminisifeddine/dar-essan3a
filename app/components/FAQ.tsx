@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Store } from "@/lib/db";
 
-const faqs = [
+const mainFaqs = [
   {
     q: "هل الدفع عند الاستلام؟",
     a: "نعم، تدفع فقط عندما يصلك المنتج وتعاينه بنفسك.",
@@ -29,8 +30,37 @@ const faqs = [
   },
 ];
 
-export function FAQ() {
+const naturalFaqs = [
+  {
+    q: "هل المكونات طبيعية فعلاً؟",
+    a: "نعم، التركيبة تعتمد على مكونات طبيعية مختارة بعناية، بدون أي إضافات غريبة — غذاء إضافي ضمن نظامك اليومي.",
+  },
+  {
+    q: "كيف أستعمل المنتج؟",
+    a: "تناول الكمية الموصى بها على العبوة يومياً — تقدر تضيفها للخبز، الحليب، الشوفان، التمر أو العصائر والسموثي.",
+  },
+  {
+    q: "هل الدفع عند الاستلام؟",
+    a: "نعم، تدفع فقط عندما يصلك المنتج وتعاينه بنفسك. بدون مخاطرة.",
+  },
+  {
+    q: "كم تدوم مدة التوصيل؟",
+    a: "من 24 إلى 72 ساعة حسب الولاية — نوصّل لجميع ولايات الوطن (58 ولاية).",
+  },
+  {
+    q: "كيف أطلب؟",
+    a: "املأ الاستمارة بالاسم، رقم الهاتف، والعنوان، وسنتصل بك لتأكيد الطلب قبل الإرسال.",
+  },
+  {
+    q: "هل يناسبني إذا كانت عندي حساسية أو مرض مزمن؟",
+    a: "إذا كان لديك مرض مزمن، حساسية غذائية، أو تتناول أدوية، استشر مختصاً قبل الاستخدام.",
+  },
+];
+
+export function FAQ({ store }: { store?: Partial<Store> | null }) {
   const [open, setOpen] = useState<number | null>(0);
+  const isNatural = !!store?.subdomain && store.subdomain !== "main";
+  const faqs = isNatural ? naturalFaqs : mainFaqs;
   return (
     <section id="faq" className="py-16 md:py-24 bg-ivory">
       <div className="container mx-auto px-4 max-w-3xl">

@@ -7,7 +7,6 @@ export function Hero({ store }: { store?: Partial<Store> | null }) {
     store?.hero_subtitle ||
     "قطع تقليدية جزائرية أصيلة، تصنعها أيادي حرفيي بوسعادة — توصيل لكل ولايات الوطن، والدفع عند الاستلام.";
   const storeName = store?.name || "دار الصنعة";
-  const isCustomStore = store?.subdomain && store?.subdomain !== "main";
 
   return (
     <section className="relative bg-cream overflow-hidden py-16 md:py-24">
@@ -33,14 +32,6 @@ export function Hero({ store }: { store?: Partial<Store> | null }) {
             priority
           />
         </div>
-
-        {isCustomStore && (
-          <div className="mb-4">
-            <span className="inline-block bg-deepgreen/10 text-deepgreen text-xs font-mono font-bold px-3 py-1 rounded-full" dir="ltr">
-              {store.subdomain}.darelsanaa.com
-            </span>
-          </div>
-        )}
 
         <h2 className="font-amiri text-4xl md:text-6xl text-deepgreen mb-6 leading-tight max-w-3xl mx-auto">
           {heroTitle}

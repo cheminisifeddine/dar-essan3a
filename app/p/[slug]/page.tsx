@@ -92,7 +92,7 @@ export default async function ProductPage({
       <AnnouncementBar store={store} />
       <Header store={store} />
       <main className="bg-cream pb-16">
-        <TrustBar compact />
+        <TrustBar compact store={store} />
         <section className="container mx-auto px-4 py-8 md:py-12">
           {/* Breadcrumb */}
           <div className="font-tajawal text-sm text-muted mb-6 flex items-center gap-2">
@@ -169,7 +169,9 @@ export default async function ProductPage({
               </p>
 
               <p className="text-terracotta font-tajawal text-sm mb-6">
-                ⚠️ الكمية محدودة — منتجات يدوية تُصنع بعدد قليل
+                {product.store_id && product.store_id !== "main"
+                  ? "⚠️ الكمية محدودة — اطلب الآن قبل نفاد المخزون"
+                  : "⚠️ الكمية محدودة — منتجات يدوية تُصنع بعدد قليل"}
               </p>
 
               <OrderForm initialProduct={product} store={store} />
@@ -177,8 +179,8 @@ export default async function ProductPage({
           </div>
         </section>
 
-        <TrustBar />
-        <FAQ />
+        <TrustBar store={store} />
+        <FAQ store={store} />
 
         {related.length > 0 && (
           <section className="container mx-auto px-4 py-16">

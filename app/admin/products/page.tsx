@@ -155,6 +155,14 @@ export default function AdminProductsPage() {
                 >
                   عرض ↗
                 </Link>
+                <Link
+                  href={`/l/${p.slug}${p.store_id && p.store_id !== 'main' ? `?store=${p.store_id}` : ''}`}
+                  target="_blank"
+                  className="text-terracotta hover:underline text-sm font-bold"
+                  title="صفحة الهبوط الإعلانية (FB Ads)"
+                >
+                  لاندنغ ↗
+                </Link>
               </div>
             </div>
           ))}
