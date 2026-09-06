@@ -1,6 +1,7 @@
-"use client";
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import type { Metadata } from "next";
 import AnnouncementBar from "./components/AnnouncementBar";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
@@ -13,57 +14,88 @@ import FinalCTA from "./components/FinalCTA";
 import Footer from "./components/Footer";
 import WhatsAppFloat from "./components/WhatsAppFloat";
 import StoreThemeStyle from "./components/StoreThemeStyle";
-import { normalizeApiProduct, Product } from "./data/products";
-import type { Store } from "@/lib/db";
+import { normalizeApiProduct, STORE } from "./data/products";
+import {
+  getStoreBySubdomain,
+  getDefaultStore,
+  listProducts,
+  Store,
+} from "@/lib/db";
 
-function detectSubdomain(): string {
-  if (typeof window === "undefined") return "main";
-  const params = new URLSearchParams(window.location.search);
-  const q = params.get("store");
-  if (q) return q.toLowerCase().trim();
-  const host = window.location.hostname.toLowerCase();
-  if (host.endsWith(".localhost")) {
-    const sub = host.replace(/\.localhost$/, "");
-    if (sub && sub !== "www" && sub !== "localhost") return sub;
-    return "main";
+// Server-side store resolution: middleware rewrites host-based visits
+// (sante.darelsanaa.com/...) to include ?store=sante internally, so the
+// FIRST paint already renders the correct store — no flash of the main site.
+async function resolveStore(storeParam?: string | string[]): Promise<Store> {
+  try {
+    const sub = Array.isArray(storeParam) ? storeParam[0] : storeParam;
+    if (sub) {
+      const s = await getStoreBySubdomain(sub.toLowerCase().trim());
+      if (s) return s;
+    }
+    return await getDefaultStore();
+  } catch {
+    return await getDefaultStore();
   }
-  if (host === "darelsanaa.com" || host === "www.darelsanaa.com" || host === "localhost" || host.endsWith(".pages.dev") || host.endsWith(".vercel.app")) {
-    // pages.dev preview: try first label as store? only if 3+ parts and not www
-    const parts = host.split(".");
-    if ((host.endsWith(".pages.dev") || host.endsWith(".vercel.app")) && parts.length >= 4) return parts[0];
-    return "main";
-  }
-  if (host.endsWith(".darelsanaa.com")) {
-    const sub = host.replace(".darelsanaa.com", "");
-    if (sub && sub !== "www") return sub;
-  }
-  return "main";
 }
 
-export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [store, setStore] = useState<Store | null>(null);
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: { store?: string | string[] };
+}): Promise<Metadata> {
+  const store = await resolveStore(searchParams?.store);
+  if (!store.subdomain || store.subdomain === "main") {
+    return {
+      title: "دار الصنعة — منتجات تقليدية جزائرية أصلية من بوسعادة",
+      description:
+        "قطع تقليدية جزائرية أصيلة من بوسعادة: نسيج النخيل، الفخار، النحاس، واللوحات. توصيل لـ 58 ولاية، والدفع عند الاستلام.",
+      openGraph: {
+        title: "دار الصنعة — منتجات تقليدية جزائرية أصلية من بوسعادة",
+        description:
+          "قطع تقليدية جزائرية أصيلة من بوسعادة، توصيل لكل ولايات الوطن، الدفع عند الاستلام.",
+        url: `https://${STORE.domain}`,
+        type: "website",
+        locale: "ar_DZ",
+        images: [`https://${STORE.domain}/images/logo.webp`],
+      },
+    };
+  }
+  const domain = `${store.subdomain}.${STORE.domain}`;
+  const title = store.meta_title || `${store.name} — ${store.hero_title || ""}`.trim();
+  const description =
+    store.meta_description ||
+    store.hero_subtitle ||
+    `${store.name} — منتجات طبيعية مختارة. توصيل لـ 58 ولاية والدفع عند الاستلام.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://${domain}`,
+      type: "website",
+      locale: "ar_DZ",
+      images: [store.logo_url ? `https://${domain}${store.logo_url}` : `https://${domain}/images/logo.webp`],
+    },
+  };
+}
 
-  useEffect(() => {
-    const sub = detectSubdomain();
-    // Resolve store config for theming (name, colors, hero, announcement)
-    fetch(`/api/stores?subdomain=${encodeURIComponent(sub)}&single=true`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.store) setStore(data.store);
-      })
-      .catch(() => {});
-    // Load products for this store (API also reads x-store-subdomain via middleware)
-    const q = sub && sub !== "main" ? `?store=${encodeURIComponent(sub)}` : "";
-    fetch(`/api/products${q}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.products)) {
-          setProducts(data.products.map(normalizeApiProduct));
-        }
-      })
-      .catch(() => {});
-  }, []);
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: { store?: string | string[] };
+}) {
+  const store = await resolveStore(searchParams?.store);
+  const storeKey = store.subdomain && store.subdomain !== "main" ? store.subdomain : "main";
+
+  // Strict separation: only this store's products (+ shared 'all').
+  let products: ReturnType<typeof normalizeApiProduct>[] = [];
+  try {
+    const dbProducts = await listProducts(true, storeKey);
+    products = dbProducts.map(normalizeApiProduct);
+  } catch {
+    products = [];
+  }
 
   return (
     <>

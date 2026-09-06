@@ -44,6 +44,9 @@ export function extractSubdomain(hostHeader: string | null): string {
   // Strip port
   const hostname = hostHeader.split(":")[0].toLowerCase().trim();
 
+  // IP addresses (local dev, direct IP access) have no subdomain
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return "main";
+
   // Handle localhost: e.g. sante.localhost
   if (hostname.endsWith(".localhost")) {
     const sub = hostname.replace(/\.localhost$/, "");
