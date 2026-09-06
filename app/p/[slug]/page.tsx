@@ -83,8 +83,20 @@ export default async function ProductPage({
   const store = await resolveStoreForPage(searchParams?.store, product.store_id);
   const homeHref = store.subdomain && store.subdomain !== "main" ? getStorePreviewUrl(store.subdomain, "/") : "/";
 
-  // Related products
-  const related = staticProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
+  // Related products — same store ONLY (strict separation, no cross-store leak).
+  // Santé with a single product shows no related section.
+  let related: Product[] = [];
+  try {
+    const { listProducts } = await import("@/lib/db");
+    const storeKey = store.subdomain && store.subdomain !== "main" ? store.subdomain : "main";
+    const sameStore = await listProducts(true, storeKey);
+    related = sameStore
+      .map(normalizeApiProduct)
+      .filter((p) => p.slug !== product.slug)
+      .slice(0, 3);
+  } catch {
+    related = [];
+  }
 
   return (
     <>
