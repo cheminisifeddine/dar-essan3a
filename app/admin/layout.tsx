@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { AdminStoreProvider, AdminStoreSwitcher } from "./components/AdminStoreContext";
 
 const nav = [
   { href: "/admin", label: "لوحة التحكم" },
@@ -55,6 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
+    <AdminStoreProvider>
     <div dir="rtl" className="min-h-screen bg-cream text-ink font-tajawal">
       <div className="flex flex-col md:flex-row">
         <aside className="w-full md:w-64 bg-deepgreen text-cream min-h-screen md:sticky md:top-0">
@@ -62,7 +64,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <h1 className="font-amiri text-2xl text-gold">دار الصنعة</h1>
             <p className="text-sm text-cream/60">لوحة الإدارة</p>
           </div>
-          <nav className="p-4 space-y-2">
+          <div className="pt-4">
+            <AdminStoreSwitcher />
+          </div>
+          <nav className="p-4 pt-0 space-y-2">
             {nav.map((item) => (
               <Link
                 key={item.href}
@@ -85,5 +90,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
     </div>
+    </AdminStoreProvider>
   );
 }

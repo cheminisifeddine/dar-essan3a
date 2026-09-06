@@ -4,8 +4,10 @@ export const runtime = "edge";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MAIN_DOMAIN } from "@/lib/store";
+import { useAdminStore, storeDomain } from "./components/AdminStoreContext";
 
 export default function AdminDashboardPage() {
+  const { current, currentStore, stores: ctxStores } = useAdminStore();
   const [stats, setStats] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -13,10 +15,14 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
+    // Scope the whole dashboard to the switched store: each store gets its full admin view
+    const q = current && current !== "all" ? `?store=${encodeURIComponent(current)}` : "";
+    const q5 = current && current !== "all" ? `?limit=5&store=${encodeURIComponent(current)}` : "?limit=5";
     Promise.all([
-      fetch("/api/admin/stats").then((r) => r.json()),
-      fetch("/api/admin/orders?limit=5").then((r) => r.json()),
-      fetch("/api/admin/products").then((r) => r.json()),
+      fetch(`/api/admin/stats${q}`).then((r) => r.json()),
+      fetch(`/api/admin/orders${q5}`).then((r) => r.json()),
+      fetch(`/api/admin/products${q}`).then((r) => r.json()),
       fetch("/api/admin/stores").then((r) => r.json()),
     ]).then(([statsData, ordersData, productsData, storesData]) => {
       setStats(statsData.stats || null);
@@ -25,15 +31,25 @@ export default function AdminDashboardPage() {
       setStores(storesData.stores || []);
       setLoading(false);
     });
-  }, []);
+  }, [current]);
 
   if (loading) return <p className="text-muted">جارٍ التحميل…</p>;
   if (!stats) return <p className="text-muted">لا توجد بيانات</p>;
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h2 className="font-amiri text-3xl text-deepgreen">لوحة التحكم</h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+        <div>
+          <h2 className="font-amiri text-3xl text-deepgreen">لوحة التحكم</h2>
+          {current === "all" ? (
+            <p className="text-sm text-muted mt-1">🌐 تعرض بيانات <span className="font-bold">جميع المتاجر</span> — بدّل المتجر من القائمة الجانبية لعرض إدارة متجر واحد</p>
+          ) : (
+            <p className="text-sm text-muted mt-1">
+              🏪 تدير الآن: <span className="font-bold text-deepgreen">{currentStore?.name || current}</span>{" "}
+              <span className="font-mono text-gold" dir="ltr">{storeDomain(current)}</span>
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <Link
             href="/admin/stores/new"

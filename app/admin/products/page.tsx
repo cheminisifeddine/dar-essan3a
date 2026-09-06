@@ -4,6 +4,7 @@ export const runtime = "edge";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Store } from "@/lib/db";
+import { useAdminStore } from "../components/AdminStoreContext";
 
 type Product = {
   id: string;
@@ -16,10 +17,16 @@ type Product = {
 };
 
 export default function AdminProductsPage() {
+  const { current } = useAdminStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [selectedStore, setSelectedStore] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Follow the sidebar store switcher: switching store re-scopes this page
+  useEffect(() => {
+    setSelectedStore(current === "all" ? "" : current);
+  }, [current]);
 
   useEffect(() => {
     fetch("/api/admin/stores")
