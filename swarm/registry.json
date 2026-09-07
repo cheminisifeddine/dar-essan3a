@@ -4,81 +4,81 @@
    "name": "commander",
    "channel_id": "1546191136652001471",
    "role": "Commander — approvals + budget caps",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "fb-ads-expert",
    "channel_id": "1546174997549158441",
    "role": "FB ads full auto (no Ads Manager)",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "product-studio",
    "channel_id": "1546191137717354697",
    "role": "Photos + AR/FR SEO catalog",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "store-builder",
    "channel_id": "1546191138753478787",
    "role": "Seller subdomain stores",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "order-cod",
    "channel_id": "1546191139705454745",
    "role": "COD + Yalidine",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "support-inbox",
    "channel_id": "1546191140699770902",
    "role": "FR/AR support",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "content-tiktok",
    "channel_id": "1546191142335418412",
    "role": "TikTok/Reels + SEO",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "engineer",
    "channel_id": "1546191144109481994",
    "role": "Cloudflare + GitHub",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "analytics",
    "channel_id": "1546191145229492324",
    "role": "Pixel/CAPI/ROAS",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   },
   {
    "name": "finance",
    "channel_id": "1546191146353565806",
    "role": "COD cash + returns",
-   "status": "live-pending-gateway-restart",
+   "status": "live",
    "model": "deepseek-v4-flash",
-   "provider": "opencode-zen"
+   "provider": "opencode-go"
   }
  ],
  "full_swarm_plan": [
